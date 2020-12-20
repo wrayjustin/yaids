@@ -118,7 +118,7 @@ extern void yaidsio_print_horizontal_line(int chars)
 
 extern void yaidsio_print_header(void)
 {
-    yaidsio_print_std_line("%s -- %s | %s", PROGRAM_NAME, PROGRAM_VERSION);
+    yaidsio_print_std_line("%s -- %s", PROGRAM_NAME, PROGRAM_VERSION);
     yaidsio_print_std_line("\t%s", PROGRAM_SUBLINE);
     yaidsio_print_std_line("\t%s", PROGRAM_DESCRIPTION);
     yaidsio_print_std_line("\t%s", COPYRIGHT);
@@ -132,7 +132,7 @@ extern void yaidsio_print_arg_line(char *opt, char *type, char *desc)
 
 extern void yaidsio_help(char *exe)
 {
-    yaidsio_print_std_line("%s -- %s | %s", PROGRAM_NAME, PROGRAM_VERSION);
+    yaidsio_print_std_line("%s -- %s", PROGRAM_NAME, PROGRAM_VERSION);
     yaidsio_print_std_line("\t%s", PROGRAM_SUBLINE);
     yaidsio_print_std_line("\t%s", PROGRAM_DESCRIPTION);
     yaidsio_print_std_line("\t%s", COPYRIGHT);
