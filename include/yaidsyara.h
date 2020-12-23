@@ -39,9 +39,9 @@
 extern int yaidsyara_yara_initialize(void);
 extern int yaidsyara_yara_finalize(void);
 extern void yaidsyara_init(yaidsYaraScanner_ptr yara);
-extern int yaidsyara_create_scanner(yaidsConfig config,
+extern int yaidsyara_create_scanner(yaidsConfig_ptr config,
                                     yaidsYaraScanner_ptr yara);
-extern int yaidsyara_create_scanners(yaidsConfig config,
+extern int yaidsyara_create_scanners(yaidsConfig_ptr config,
                                      yaidsYaraScanner_ptr yaraScanners);
 extern void yaidsyara_scan_packet(yaidsYaraScanner_ptr yaraScanner,
                                   yaidsPcapPacket_ptr packet,
@@ -51,6 +51,8 @@ extern void yaidsyara_scan_packet(yaidsYaraScanner_ptr yaraScanner,
                                   yaidsConfig_ptr config);
 extern int yaidsyara_scanner_callback(YR_SCAN_CONTEXT * scanContext,
                                       int status, void *rule, void *args);
+extern char *yaidsyara_scanner_callback_get_alert(yaidsYaraCallbackArgs_ptr callbackArgs, YR_RULE *yaraRule, YR_SCAN_CONTEXT * scanContext);
+extern void yaidsyara_scanner_callback_get_alert_line(yaidsYaraCallbackArgs_ptr callbackArgs, yaidsPcapPacketHeader_ptr parsedPacketHeaders, char* alertString, int alertStringMax, char* timeString, char* ruleName, char* metaMatch, char* stringMatch);
 extern char *yaidsyara_scanner_callback_get_match_meta(YR_SCAN_CONTEXT *
                                                        scanContext,
                                                        YR_RULE * yaraRule);

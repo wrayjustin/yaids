@@ -33,6 +33,7 @@
  *
  */
 
+#include <config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -176,12 +177,6 @@ extern yaidsConfig yaidsio_getopts(int argc, char **argv)
 {
     yaidsConfig config = yaidsconf_init();
 
-    if (argc == 1) {
-        yaidsio_help(argv[0]);
-        config.status = YAIDS_NO_ACTION;
-        return config;
-    }
-
     int argopts;
     int optidx;
 
@@ -247,101 +242,35 @@ extern yaidsConfig yaidsio_getopts(int argc, char **argv)
         config.status = YAIDS_INVALID_ARGUMENTS;
     }
 
-    if (config.silent_mode && config.output_mode) {
-        yaidsio_help(argv[0]);
-        config.status = YAIDS_INVALID_MODE;
-        return config;
-    }
-
-    if ((config.yaraRulesFile)
-        && (access(config.yaraRulesFile, R_OK) != YAIDS_SUCCESS)) {
-        config.status = YAIDS_FILE_DOES_NOT_EXIST;
-        return config;
-    }
-
-    if ((config.yaraRulesFile)
-        && (access(config.yaraRulesFile, R_OK) != YAIDS_SUCCESS)) {
-        config.status = YAIDS_FILE_DOES_NOT_EXIST;
-        return config;
-    }
-
-    if ((config.pcapDevice || config.pcapInputFile)
-        && (config.yaraRulesFile)) {
-
-        if (!config.outputPrefix) {
-            char epochString[32];
-            struct tm *epochTM;
-            time_t timestamp = time(NULL);
-            epochTM = gmtime(&timestamp);
-            strftime(epochString, 32, "%s", epochTM);
-            config.outputPrefix = strdup(epochString);
-        }
-
-        if (!config.outputPath) {
-            config.outputPath = "./";
-        }
-
-        if (!config.output_mode) {
-            config.outputAlertFile =
-                (char *) calloc(PATH_MAX + 1, sizeof(char));
-            snprintf(config.outputAlertFile, PATH_MAX,
-                     "%s/yaids.%s.alerts", config.outputPath,
-                     config.outputPrefix);
-
-            config.outputPcapFile =
-                (char *) calloc(PATH_MAX + 1, sizeof(char));
-            snprintf(config.outputPcapFile, PATH_MAX, "%s/yaids.%s.pcap",
-                     config.outputPath, config.outputPrefix);
-
-            if (access(config.outputPath, W_OK) != YAIDS_SUCCESS) {
-                config.status = YAIDS_PERMISSION_DENIED;
-                return config;
-            }
-
-            if ((access(config.outputAlertFile, F_OK) == YAIDS_SUCCESS)
-                && (access(config.outputAlertFile, W_OK) != YAIDS_SUCCESS)) {
-                config.status = YAIDS_PERMISSION_DENIED;
-                return config;
-            }
-
-            if ((access(config.outputPcapFile, F_OK) == YAIDS_SUCCESS)
-                && (access(config.outputPath, W_OK) != YAIDS_SUCCESS)) {
-                config.status = YAIDS_PERMISSION_DENIED;
-                return config;
-            }
-        }
-
-        config.status = YAIDS_SUCCESS;
-    } else {
-        config.status = YAIDS_MISSING_ARGUMENTS;
-    }
-
-    if (config.debug) {
-        yaidsio_print_debug_line("Configuration:");
-        yaidsio_print_debug_line("\t pcapDevice: %s", config.pcapDevice);
-        yaidsio_print_debug_line("\t yaraRulesFile: %s",
-                                 config.yaraRulesFile);
-        yaidsio_print_debug_line("\t outputPrefix: %s",
-                                 config.outputPrefix);
-        yaidsio_print_debug_line("\t outputPath: %s", config.outputPath);
-        yaidsio_print_debug_line("\t pcapInputFile: %s",
-                                 config.pcapInputFile);
-        yaidsio_print_debug_line("\t outputAlertFile: %s",
-                                 config.outputAlertFile);
-        yaidsio_print_debug_line("\t outputPcapFile: %s",
-                                 config.outputPcapFile);
-        yaidsio_print_debug_line("\t threads: %d", config.threads);
-        yaidsio_print_debug_line("\t timelimit: %d", config.timelimit);
-        yaidsio_print_debug_line("\t read_pcap_file: %d",
-                                 config.read_pcap_file);
-        yaidsio_print_debug_line("\t silent_mode: %d", config.silent_mode);
-        yaidsio_print_debug_line("\t output_mode: %d", config.output_mode);
-        yaidsio_print_debug_line("\t flush_mode: %d", config.flush_mode);
-        yaidsio_print_debug_line("\t debug: %d", config.debug);
-        yaidsio_print_debug_line("\t status: %d", config.status);
-    }
+    config.status = YAIDS_PENDING_CONFIG;
 
     return config;
+}
+
+extern void yaidsio_print_config_debug(yaidsConfig_ptr config)
+{
+    yaidsio_print_debug_line("Configuration:");
+    yaidsio_print_debug_line("\t pcapDevice: %s", config->pcapDevice);
+    yaidsio_print_debug_line("\t yaraRulesFile: %s",
+                             config->yaraRulesFile);
+    yaidsio_print_debug_line("\t outputPrefix: %s",
+                             config->outputPrefix);
+    yaidsio_print_debug_line("\t outputPath: %s", config->outputPath);
+    yaidsio_print_debug_line("\t pcapInputFile: %s",
+                             config->pcapInputFile);
+    yaidsio_print_debug_line("\t outputAlertFile: %s",
+                             config->outputAlertFile);
+    yaidsio_print_debug_line("\t outputPcapFile: %s",
+                             config->outputPcapFile);
+    yaidsio_print_debug_line("\t threads: %d", config->threads);
+    yaidsio_print_debug_line("\t timelimit: %d", config->timelimit);
+    yaidsio_print_debug_line("\t read_pcap_file: %d",
+                             config->read_pcap_file);
+    yaidsio_print_debug_line("\t silent_mode: %d", config->silent_mode);
+    yaidsio_print_debug_line("\t output_mode: %d", config->output_mode);
+    yaidsio_print_debug_line("\t flush_mode: %d", config->flush_mode);
+    yaidsio_print_debug_line("\t debug: %d", config->debug);
+    yaidsio_print_debug_line("\t status: %d", config->status);
 }
 
 extern void yaidsio_exit_error(int errorCode)

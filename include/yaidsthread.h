@@ -120,8 +120,14 @@ yaidsthread_create_output_thread(yaidsOutputThreadArgs_ptr threadArgs);
 extern yaidsThreadReturn
 yaidsthread_create_timelimit_thread(yaidsTimelimitThreadArgs_ptr
                                     threadArgs);
-extern yaidsThreadList_ptr yaidsthread_new_threadlist(yaidsConfig config);
+extern yaidsThreadList_ptr yaidsthread_new_threadlist(yaidsConfig_ptr config);
 extern yaidsThreadInfo_ptr yaidsthread_new_threadinfo(void);
+extern int yaidsthread_start_input_threads(yaidsConfig_ptr config, yaidsThreadList_ptr threadList, yaidsThreadStatuses_ptr threadStatuses, yaidsPcapHandle_ptr pcapHandle, yaidsInputDataQueue_ptr yaidsInputQueue, yaidsPacketCounts_ptr packetCounts);
+extern int yaidsthread_start_yara_threads(yaidsConfig_ptr config, yaidsThreadList_ptr threadList, yaidsThreadStatuses_ptr threadStatuses, yaidsInputDataQueue_ptr yaidsInputQueue, yaidsOutputDataQueue_ptr
+                                   yaidsOutputQueue, yaidsYaraScanner_ptr yaraScanners, yaidsPacketCounts_ptr packetCounts);
+extern int yaidsthread_start_output_threads(yaidsConfig_ptr config, yaidsThreadList_ptr threadList, yaidsThreadStatuses_ptr threadStatuses, yaidsPcapHandle_ptr pcapHandle, yaidsOutputDataQueue_ptr
+                                   yaidsOutputQueue, yaidsPacketCounts_ptr packetCounts, int scannerThreadCount);
+extern int yaidsthread_start_timelimit_threads(yaidsConfig_ptr config, yaidsThreadList_ptr threadList, bool * yaidsRunning, int scannerThreadCount);
 extern int yaidsthread_run_threads(bool * yaidsRunning, yaidsConfig config,
                                    yaidsThreadList_ptr threadList,
                                    yaidsInputDataQueue_ptr yaidsInputQueue,

@@ -37,6 +37,7 @@
 #define yaidsconf
 
 extern yaidsConfig yaidsconf_init(void);
-extern int yaidsConfig_get_default_thread_count(void);
+extern int yaidsconf_get_default_thread_count(void);
+extern void yaidsconf_config_init(yaidsConfig_ptr config, char* exeName, int options);
 
 #endif

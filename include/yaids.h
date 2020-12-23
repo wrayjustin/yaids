@@ -40,6 +40,7 @@
 
 #define YAIDS_SUCCESS                       0
 #define YAIDS_ERROR                         1
+#define YAIDS_PENDING_CONFIG                2
 #define YAIDS_MISSING_ARGUMENTS             2
 #define YAIDS_INVALID_ARGUMENTS             3
 #define YAIDS_INVALID_MODE                  4
@@ -63,7 +64,6 @@ extern const char *PROGRAM_VERSION;
 extern _Bool global_yaidsRunning;
 
 extern void yaids_signal(int signalValue);
-extern void yaids_finish(void);
 extern _Bool verify_status(int statusCode);
 extern int main(int argc, char **argv);
 

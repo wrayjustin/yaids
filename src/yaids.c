@@ -33,12 +33,12 @@
  *
  */
 
+#include <config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <config.h>
 #include <yaids.h>
 #include <yaidstypes.h>
 #include <yaidsconf.h>
@@ -70,11 +70,6 @@ extern void yaids_signal(int signalValue)
     }
 }
 
-extern void yaids_finish(void)
-{
-    global_yaidsRunning = false;
-}
-
 extern _Bool verify_status(int statusCode)
 {
     if (statusCode != YAIDS_SUCCESS) {
@@ -92,18 +87,21 @@ extern int main(int argc, char **argv)
     yaidsRunning = &global_yaidsRunning;
 
     yaidsConfig config = yaidsio_getopts(argc, argv);
+    yaidsconf_config_init(&config, argv[0], argc);
     verify_status(config.status);
+
+    if (config.debug) yaidsio_print_config_debug(&config);
 
     yaidsPcapHandle pcapHandle;
     verify_status(yaidspcap_create_handle
-                  (config, (yaidsPcapHandle_ptr) & pcapHandle));
+                  (&config, (yaidsPcapHandle_ptr) & pcapHandle));
 
     verify_status(yaidsyara_yara_initialize());
 
     yaidsYaraScanner yaraScanners[config.threads];
-    verify_status(yaidsyara_create_scanners(config, yaraScanners));
+    verify_status(yaidsyara_create_scanners(&config, yaraScanners));
 
-    yaidsThreadList_ptr threadList = yaidsthread_new_threadlist(config);
+    yaidsThreadList_ptr threadList = yaidsthread_new_threadlist(&config);
     yaidsInputDataQueue_ptr yaidsInputQueue =
         yaidsthread_new_input_queue();
     yaidsOutputDataQueue_ptr yaidsOutputQueue =

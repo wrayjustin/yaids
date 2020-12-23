@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([yaids], [0.0.1], [wray.justin@gmail.com])
+AC_INIT([yaids], [0.0.2], [wray.justin@gmail.com])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 
@@ -30,6 +30,8 @@ AC_SEARCH_LIBS([yr_scanner_set_callback], [yara],, AC_ERROR([Missing yara and/or
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([ctype.h],, AC_ERROR([Missing libc6-dev Header]))
+AC_CHECK_HEADERS([fcntl.h],, AC_ERROR([Missing libc6-dev Header]))
+AC_CHECK_HEADERS([malloc.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([net/ethernet.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([netinet/ether.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([netinet/if_ether.h],, AC_ERROR([Missing libc6-dev Header]))
@@ -45,8 +47,10 @@ AC_CHECK_HEADERS([stdbool.h],, AC_ERROR([Missing libgcc-dev Header]))
 AC_CHECK_HEADERS([stdio.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([stdlib.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([sys/prctl.h],, AC_ERROR([Missing libc6-dev Header]))
+AC_CHECK_HEADERS([sys/stat.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([sys/socket.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([sys/sysinfo.h],, AC_ERROR([Missing libc6-dev Header]))
+AC_CHECK_HEADERS([sys/types.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([time.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([unistd.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([yara.h],, AC_ERROR([Missing libyara-dev Header]))
@@ -57,12 +61,14 @@ AC_CHECK_HEADER_STDBOOL
 
 # Checks for library functions.
 AC_CHECK_FUNCS([memset strdup])
+AC_CHECK_FUNCS([gmtime_r])
+AC_CHECK_FUNCS([malloc_trim])
 
 # Debug
 AC_ARG_ENABLE([debug],
   [AS_HELP_STRING([--enable-debug], [compiles with -pg option])],
   [if test x$enableval = xyes; then
-    CFLAGS=" -pg $CFLAGS"
+    CFLAGS=" -pg -g -ggdb $CFLAGS"
   fi])
 
 AC_CONFIG_FILES([

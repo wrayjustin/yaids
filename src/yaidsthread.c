@@ -33,11 +33,13 @@
  *
  */
 
+#include <config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <malloc.h>
 #include <yaids.h>
 #include <yaidstypes.h>
 #include <yaidsconf.h>
@@ -49,6 +51,9 @@
 #include <pcap.h>
 #include <signal.h>
 #include <sys/prctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 extern yaidsPacketCounts_ptr yaidsthread_new_packet_counts(void)
 {
@@ -110,8 +115,8 @@ yaidsthread_new_input_thread_args(yaidsInputDataQueue_ptr dataQueue,
         (yaidsInputThreadArgs_ptr) calloc(sizeof(yaidsInputThreadArgs),
                                           sizeof(int));
     threadArgs->dataQueue = dataQueue;
-    threadArgs->pcapHandle = pcapHandle;
-    threadArgs->config = config;
+    threadArgs->pcapHandle = pcapHandle; //LGTM[cpp/stack-address-escape] - Only pointers are passed as parameters and returned
+    threadArgs->config = config; //LGTM[cpp/stack-address-escape] - Only pointers are passed as parameters and returned
     threadArgs->packetCounts = packetCounts;
     threadArgs->threadStatuses = threadStatuses;
     return threadArgs;
@@ -125,7 +130,7 @@ yaidsthread_new_timelimit_thread_args(bool * yaidsRunning,
     threadArgs = (yaidsTimelimitThreadArgs_ptr)
         calloc(sizeof(yaidsTimelimitThreadArgs), sizeof(int));
     threadArgs->yaidsRunning = yaidsRunning;
-    threadArgs->config = config;
+    threadArgs->config = config; //LGTM[cpp/stack-address-escape] - Only pointers are passed as parameters and returned
     return threadArgs;
 }
 
@@ -165,8 +170,8 @@ yaidsthread_new_output_thread_args(yaidsOutputDataQueue_ptr dataQueue,
         (yaidsOutputThreadArgs_ptr) calloc(sizeof(yaidsOutputThreadArgs),
                                            sizeof(int));
     threadArgs->dataQueue = dataQueue;
-    threadArgs->config = config;
-    threadArgs->pcapHandle = pcapHandle;
+    threadArgs->config = config; //LGTM[cpp/stack-address-escape] - Only pointers are passed as parameters and returned
+    threadArgs->pcapHandle = pcapHandle; //LGTM[cpp/stack-address-escape] - Only pointers are passed as parameters and returned
     threadArgs->packetCounts = packetCounts;
     threadArgs->threadStatuses = threadStatuses;
     return threadArgs;
@@ -186,8 +191,8 @@ yaidsthread_new_yara_thread_args(yaidsInputDataQueue_ptr inputDataQueue,
                                          sizeof(int));
     threadArgs->inputDataQueue = inputDataQueue;
     threadArgs->outputDataQueue = outputDataQueue;
-    threadArgs->yaraScanner = yaraScanner;
-    threadArgs->config = config;
+    threadArgs->yaraScanner = yaraScanner; //LGTM[cpp/stack-address-escape] - Only pointers are passed as parameters and returned
+    threadArgs->config = config; //LGTM[cpp/stack-address-escape] - Only pointers are passed as parameters and returned
     threadArgs->packetCounts = packetCounts;
     threadArgs->threadStatuses = threadStatuses;
     return threadArgs;
@@ -257,7 +262,7 @@ extern void yaidsthread_set_pcap_finished(yaidsThreadStatuses_ptr threadStatuses
     
     if (config->debug)
         yaidsio_print_debug_line("Thread(s) Finished: %u [PCAP]",
-                                 pthread_self());
+                                 (unsigned int)pthread_self());
     
 }
 
@@ -273,7 +278,7 @@ extern void yaidsthread_set_yara_finished(yaidsThreadStatuses_ptr threadStatuses
     
     if (config->debug)
         yaidsio_print_debug_line("Thread(s) Finished: %u [YARA]",
-                                 pthread_self());
+                                 (unsigned int)pthread_self());
 }
 
 extern void yaidsthread_set_output_finished(yaidsThreadStatuses_ptr threadStatuses, yaidsConfig_ptr config)
@@ -290,7 +295,7 @@ extern void yaidsthread_set_output_finished(yaidsThreadStatuses_ptr threadStatus
     
     if (config->debug)
         yaidsio_print_debug_line("Thread(s) Finished: %u [OUTPUT]",
-                                 pthread_self());
+                                 (unsigned int)pthread_self());
 }
 
 extern void yaidsthread_add_input_data(yaidsInputDataQueue_ptr dataQueue,
@@ -449,7 +454,7 @@ extern void *yaidsthread_pcap_thread(void *args)
 
     if (config->debug)
         yaidsio_print_debug_line("Detatching Thread: %u [PCAP]",
-                                 pthread_self());
+                                 (unsigned int)pthread_self());
 
     yaidsPcapCallbackArgs callbackArgs;
     callbackArgs.dataQueue = yaidsInputQueue;
@@ -481,17 +486,16 @@ extern void *yaidsthread_yara_thread(void *args)
 
     if (config->debug)
         yaidsio_print_debug_line("Detatching Thread: %u [Yara]",
-                                 pthread_self());
+                                 (unsigned int)pthread_self());
 
     while (true) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
+#ifdef HAVE_MALLOC_TRIM
         malloc_trim(32);
-#pragma GCC diagnostic pop
 
         if (config->debug > 1)
             yaidsio_print_debug_line("Flushing Memory [Yara Thread: %u]",
-                                     pthread_self());
+                                     (unsigned int)pthread_self());
+#endif
 
         if (yaidsInputQueue->firstNode == NULL) {
             if ((config->read_pcap_file) && (threadStatuses->pcapThreadsFinished) && (packetCounts->pcapPacketCount == packetCounts->yaraPacketCount)) {
@@ -526,18 +530,20 @@ extern void *yaidsthread_output_thread(void *args)
 
     if (config->debug)
         yaidsio_print_debug_line("Detatching Thread: %u [Output]",
-                                 pthread_self());
+                                 (unsigned int)pthread_self());
 
     FILE *alertFileHandle = NULL;
     FILE *pcapFileHandle = NULL;
 
     if (!config->output_mode) {
-        alertFileHandle = fopen(config->outputAlertFile, "a");
+        if (access(config->outputAlertFile, F_OK) != YAIDS_SUCCESS) {
+            creat(config->outputAlertFile, S_IWUSR | S_IRUSR);
+        }
+
+        alertFileHandle = fopen(config->outputAlertFile, "a"); //LGTM[cpp/world-writable-file-creation] - File permissions set during creation
 
         if (access(config->outputPcapFile, F_OK) != YAIDS_SUCCESS) {
-            FILE *createpcapFileHandle;
-            createpcapFileHandle = fopen(config->outputPcapFile, "a");
-            fclose(createpcapFileHandle);
+            creat(config->outputPcapFile, S_IWUSR | S_IRUSR);
         }
 
         pcapFileHandle =
@@ -545,14 +551,13 @@ extern void *yaidsthread_output_thread(void *args)
     }
 
     while (true) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
+#ifdef HAVE_MALLOC_TRIM
         malloc_trim(32);
-#pragma GCC diagnostic pop
 
         if (config->debug > 1)
             yaidsio_print_debug_line("Flushing Memory [Output Thread: %u]",
-                                     pthread_self());
+                                     (unsigned int)pthread_self());
+#endif
 
         if (yaidsOutputQueue->firstNode == NULL) {
             if ((config->read_pcap_file) && (threadStatuses->yaraThreadsFinished) && (packetCounts->alertPacketCount == packetCounts->outputPacketCount)) {
@@ -586,6 +591,7 @@ extern void *yaidsthread_output_thread(void *args)
 
 
             free(dataNode.alert);
+            free((void*)dataNode.data->packetHeader);
             free(dataNode.data);
             if (threadArgs->config->read_pcap_file) yaidsthread_update_output_packet_count(threadArgs->packetCounts);
         }
@@ -605,12 +611,17 @@ extern void *yaidsthread_timelimit_thread(void *args)
 
     if (config->debug) {
         yaidsio_print_debug_line("Detatching Thread: %u [Timelimit]",
-                                 pthread_self());
+                                 (unsigned int)pthread_self());
         yaidsio_print_debug_line("Timelimit Set, Sleeping: %d",
                                  threadArgs->config->timelimit);
     }
 
     sleep(threadArgs->config->timelimit);
+
+    if (config->debug) {
+            yaidsio_print_debug_line("Timelimit Reeached, Slept: %d",
+                                 threadArgs->config->timelimit);
+    }
 
     yaidsio_print_horizontal_line(120);
     yaidsio_print_std_line("%s\n",
@@ -621,12 +632,12 @@ extern void *yaidsthread_timelimit_thread(void *args)
     return YAIDS_SUCCESS;
 }
 
-extern yaidsThreadList_ptr yaidsthread_new_threadlist(yaidsConfig config)
+extern yaidsThreadList_ptr yaidsthread_new_threadlist(yaidsConfig_ptr config)
 {
     yaidsThreadList_ptr threadList;
     threadList =
         (yaidsThreadList_ptr) calloc(sizeof(yaidsThreadList) *
-                                     (config.threads + 2), sizeof(int));
+                                     (config->threads + 2), sizeof(int));
     return threadList;
 }
 
@@ -636,6 +647,104 @@ extern yaidsThreadInfo_ptr yaidsthread_new_threadinfo(void)
     threadInfo =
         (yaidsThreadInfo_ptr) calloc(sizeof(yaidsThreadInfo), sizeof(int));
     return threadInfo;
+}
+
+extern int yaidsthread_start_input_threads(yaidsConfig_ptr config, yaidsThreadList_ptr threadList, yaidsThreadStatuses_ptr threadStatuses, yaidsPcapHandle_ptr pcapHandle, yaidsInputDataQueue_ptr yaidsInputQueue, yaidsPacketCounts_ptr packetCounts)
+{
+    if (config->debug)
+        yaidsio_print_debug_line("Starting PCAP (Input) Thread...");
+
+    yaidsThreadInfo_ptr pcapThreadInfo = yaidsthread_new_threadinfo();
+    yaidsInputThreadArgs_ptr yaidsInputThreadArgs =
+        yaidsthread_new_input_thread_args(yaidsInputQueue, pcapHandle,
+                                          config, packetCounts, threadStatuses);
+    yaidsThreadReturn pcapThreadReturn =
+        yaidsthread_create_pcap_thread(yaidsInputThreadArgs);
+    if (pcapThreadReturn.threadStatus != YAIDS_SUCCESS) {
+        return YAIDS_THREAD_ERROR;
+    }
+    pcapThreadInfo->threadId = pcapThreadReturn.threadId;
+    pcapThreadInfo->threadType = YAIDS_THREAD_INPUT_PCAP;
+    threadList[0].threadInfo = pcapThreadInfo;
+
+    return YAIDS_SUCCESS;
+}
+
+extern int yaidsthread_start_yara_threads(yaidsConfig_ptr config, yaidsThreadList_ptr threadList, yaidsThreadStatuses_ptr threadStatuses, yaidsInputDataQueue_ptr yaidsInputQueue, yaidsOutputDataQueue_ptr
+                                   yaidsOutputQueue, yaidsYaraScanner_ptr yaraScanners, yaidsPacketCounts_ptr packetCounts)
+{
+    int scannerThreadCount;
+    for (scannerThreadCount = 0; scannerThreadCount < config->threads;
+         scannerThreadCount++) {
+        if (config->debug)
+            yaidsio_print_debug_line
+                ("Starting Yara (Process) Thread [%d]...",
+                 scannerThreadCount);
+
+        yaidsThreadInfo_ptr yaraThreadInfo = yaidsthread_new_threadinfo();;
+        yaidsYaraThreadArgs_ptr yaidsYaraThreadArgs =
+            yaidsthread_new_yara_thread_args(yaidsInputQueue,
+                                             yaidsOutputQueue,
+                                             (yaidsYaraScanner_ptr)&yaraScanners
+                                             [scannerThreadCount],
+                                             config,
+                                             packetCounts,
+                                             threadStatuses);
+        yaidsThreadReturn threadReturn =
+            yaidsthread_create_yara_thread(yaidsYaraThreadArgs);
+        if (threadReturn.threadStatus != YAIDS_SUCCESS) {
+            return YAIDS_THREAD_ERROR;
+        }
+        yaraThreadInfo->threadId = threadReturn.threadId;
+        yaraThreadInfo->threadType = YAIDS_THREAD_YARA;
+        threadList[1 + scannerThreadCount].threadInfo = yaraThreadInfo;
+    }
+
+    return YAIDS_SUCCESS;
+}
+
+extern int yaidsthread_start_output_threads(yaidsConfig_ptr config, yaidsThreadList_ptr threadList, yaidsThreadStatuses_ptr threadStatuses, yaidsPcapHandle_ptr pcapHandle, yaidsOutputDataQueue_ptr
+                                   yaidsOutputQueue, yaidsPacketCounts_ptr packetCounts, int scannerThreadCount)
+{
+    if (config->debug)
+        yaidsio_print_debug_line("Starting Output Thread...");
+
+    yaidsThreadInfo_ptr outputThreadInfo = yaidsthread_new_threadinfo();
+    yaidsOutputThreadArgs_ptr yaidsOutputThreadArgs =
+        yaidsthread_new_output_thread_args(yaidsOutputQueue, pcapHandle,
+                                           config, packetCounts, threadStatuses);
+    yaidsThreadReturn outputThreadReturn =
+        yaidsthread_create_output_thread(yaidsOutputThreadArgs);
+    if (outputThreadReturn.threadStatus != YAIDS_SUCCESS) {
+        return YAIDS_THREAD_ERROR;
+    }
+    outputThreadInfo->threadId = outputThreadReturn.threadId;
+    outputThreadInfo->threadType = YAIDS_THREAD_OUTPUT;
+    threadList[1 + scannerThreadCount].threadInfo = outputThreadInfo;
+
+    return YAIDS_SUCCESS;
+}
+
+extern int yaidsthread_start_timelimit_threads(yaidsConfig_ptr config, yaidsThreadList_ptr threadList, bool * yaidsRunning, int scannerThreadCount)
+{
+    if (config->debug)
+        yaidsio_print_debug_line("Starting Timelimit Thread...");
+
+    yaidsThreadInfo_ptr timelimitThreadInfo =
+        yaidsthread_new_threadinfo();
+    yaidsTimelimitThreadArgs_ptr yaidsTimelimitThreadArgs =
+        yaidsthread_new_timelimit_thread_args(yaidsRunning, config);
+    yaidsThreadReturn timelimitThreadReturn =
+        yaidsthread_create_timelimit_thread(yaidsTimelimitThreadArgs);
+    if (timelimitThreadReturn.threadStatus != YAIDS_SUCCESS) {
+        return YAIDS_THREAD_ERROR;
+    }
+    timelimitThreadInfo->threadId = timelimitThreadReturn.threadId;
+    timelimitThreadInfo->threadType = YAIDS_THREAD_TIMELIMIT;
+    threadList[2 + scannerThreadCount].threadInfo =
+        timelimitThreadInfo;
+
+    return YAIDS_SUCCESS;
 }
 
 extern int yaidsthread_run_threads(bool * yaidsRunning, yaidsConfig config,
@@ -657,82 +766,30 @@ extern int yaidsthread_run_threads(bool * yaidsRunning, yaidsConfig config,
     pthread_sigmask(SIG_BLOCK, &yaidsThreadSignal, NULL);
     prctl(PR_SET_PDEATHSIG, SIGHUP);
 
-    if (config.debug)
-        yaidsio_print_debug_line("Starting PCAP (Input) Thread...");
+    int inputThreadStartStatus;
+    int yaraThreadStartStatus;
+    int outputThreadStartStatus;
 
-    yaidsThreadInfo_ptr pcapThreadInfo = yaidsthread_new_threadinfo();
-    yaidsInputThreadArgs_ptr yaidsInputThreadArgs =
-        yaidsthread_new_input_thread_args(yaidsInputQueue, pcapHandle,
-                                          &config, packetCounts, threadStatuses);
-    yaidsThreadReturn pcapThreadReturn =
-        yaidsthread_create_pcap_thread(yaidsInputThreadArgs);
-    if (pcapThreadReturn.threadStatus != YAIDS_SUCCESS) {
-        return YAIDS_THREAD_ERROR;
-    }
-    pcapThreadInfo->threadId = pcapThreadReturn.threadId;
-    pcapThreadInfo->threadType = YAIDS_THREAD_INPUT_PCAP;
-    threadList[0].threadInfo = pcapThreadInfo;
+    inputThreadStartStatus = yaidsthread_start_input_threads((yaidsConfig_ptr)&config, threadList, threadStatuses, pcapHandle, yaidsInputQueue, packetCounts);
+    if (inputThreadStartStatus != YAIDS_SUCCESS)
+        return inputThreadStartStatus;
 
-    int scannerThreadCount;
-    for (scannerThreadCount = 0; scannerThreadCount < config.threads;
-         scannerThreadCount++) {
-        if (config.debug)
-            yaidsio_print_debug_line
-                ("Starting Yara (Process) Thread [%d]...",
-                 scannerThreadCount);
+    yaraThreadStartStatus = yaidsthread_start_yara_threads((yaidsConfig_ptr)&config, threadList, threadStatuses, yaidsInputQueue, yaidsOutputQueue,  yaraScanners,  packetCounts);
+    if (yaraThreadStartStatus != YAIDS_SUCCESS)
+        return yaraThreadStartStatus;
 
-        yaidsThreadInfo_ptr yaraThreadInfo = yaidsthread_new_threadinfo();;
-        yaidsYaraThreadArgs_ptr yaidsYaraThreadArgs =
-            yaidsthread_new_yara_thread_args(yaidsInputQueue,
-                                             yaidsOutputQueue,
-                                             &yaraScanners
-                                             [scannerThreadCount],
-                                             &config,
-                                             packetCounts,
-                                             threadStatuses);
-        yaidsThreadReturn threadReturn =
-            yaidsthread_create_yara_thread(yaidsYaraThreadArgs);
-        if (threadReturn.threadStatus != YAIDS_SUCCESS) {
-            return YAIDS_THREAD_ERROR;
-        }
-        yaraThreadInfo->threadId = threadReturn.threadId;
-        yaraThreadInfo->threadType = YAIDS_THREAD_YARA;
-        threadList[1 + scannerThreadCount].threadInfo = yaraThreadInfo;
-    }
+    int scannerThreadCount = config.threads - 1;
 
-    if (config.debug)
-        yaidsio_print_debug_line("Starting Output Thread...");
-
-    yaidsThreadInfo_ptr outputThreadInfo = yaidsthread_new_threadinfo();
-    yaidsOutputThreadArgs_ptr yaidsOutputThreadArgs =
-        yaidsthread_new_output_thread_args(yaidsOutputQueue, pcapHandle,
-                                           &config, packetCounts, threadStatuses);
-    yaidsThreadReturn outputThreadReturn =
-        yaidsthread_create_output_thread(yaidsOutputThreadArgs);
-    if (outputThreadReturn.threadStatus != YAIDS_SUCCESS) {
-        return YAIDS_THREAD_ERROR;
-    }
-    outputThreadInfo->threadId = outputThreadReturn.threadId;
-    outputThreadInfo->threadType = YAIDS_THREAD_OUTPUT;
-    threadList[1 + scannerThreadCount].threadInfo = outputThreadInfo;
+    outputThreadStartStatus = yaidsthread_start_output_threads((yaidsConfig_ptr)&config, threadList, threadStatuses, pcapHandle, yaidsOutputQueue, packetCounts, scannerThreadCount);
+        if (outputThreadStartStatus != YAIDS_SUCCESS)
+            return outputThreadStartStatus;
 
     if (config.timelimit > 0) {
-        if (config.debug)
-            yaidsio_print_debug_line("Starting Timelimit Thread...");
+        int timelimitThreadStartStatus;
 
-        yaidsThreadInfo_ptr timelimitThreadInfo =
-            yaidsthread_new_threadinfo();
-        yaidsTimelimitThreadArgs_ptr yaidsTimelimitThreadArgs =
-            yaidsthread_new_timelimit_thread_args(yaidsRunning, &config);
-        yaidsThreadReturn timelimitThreadReturn =
-            yaidsthread_create_timelimit_thread(yaidsTimelimitThreadArgs);
-        if (timelimitThreadReturn.threadStatus != YAIDS_SUCCESS) {
-            return YAIDS_THREAD_ERROR;
-        }
-        timelimitThreadInfo->threadId = timelimitThreadReturn.threadId;
-        timelimitThreadInfo->threadType = YAIDS_THREAD_TIMELIMIT;
-        threadList[2 + scannerThreadCount].threadInfo =
-            timelimitThreadInfo;
+        timelimitThreadStartStatus = yaidsthread_start_timelimit_threads((yaidsConfig_ptr)&config, threadList, yaidsRunning, scannerThreadCount);
+        if (timelimitThreadStartStatus != YAIDS_SUCCESS)
+            return timelimitThreadStartStatus;
     }
 
     if (config.debug) {
@@ -747,7 +804,7 @@ extern int yaidsthread_run_threads(bool * yaidsRunning, yaidsConfig config,
         for (threadListCount = 0; threadListCount < (threadTotal);
              threadListCount++) {
             yaidsio_print_debug_line("\t threadId: %u",
-                                     (&threadList
+                                     (unsigned int)(&threadList
                                       [threadListCount])->threadInfo->
                                      threadId);
             yaidsio_print_debug_line("\t\t threadType: %d",
@@ -766,13 +823,14 @@ extern int yaidsthread_run_threads(bool * yaidsRunning, yaidsConfig config,
         if ((config.read_pcap_file) && (threadStatuses->pcapThreadsFinished && threadStatuses->yaraThreadsFinished && threadStatuses->outputThreadsFinished))
             break;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
+#ifdef HAVE_MALLOC_TRIM
         malloc_trim(32);
-#pragma GCC diagnostic pop
 
         if (config.debug > 1)
             yaidsio_print_debug_line("Flushing Memory [Main Thread]");
+#else
+        sleep(1);
+#endif
     }
 
     return YAIDS_COMPLETE;

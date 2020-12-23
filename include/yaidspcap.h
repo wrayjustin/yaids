@@ -42,13 +42,19 @@
 
 extern void yaidspcap_init(yaidsPcapHandle_ptr pcapHandle);
 extern yaidsPcapPacket_ptr yaidspcap_new_packet(int size);
-extern int yaidspcap_create_handle(yaidsConfig config,
+extern int yaidspcap_create_handle(yaidsConfig_ptr config,
                                    yaidsPcapHandle_ptr pcapHandle);
 extern void yaidspcap_read_packets(yaidsPcapHandle_ptr pcapHandle,
                                    yaidsPcapCallbackArgs_ptr callbackArgs);
 extern void yaidspcap_read_callback(u_char * args,
                                     const struct pcap_pkthdr *packetHeader,
                                     const u_char * packetBody);
+extern yaidsPcapPacketHeaderFrame_ptr yaidspcap_parse_pcap_headers_frame(etherHeader_ptr etherHeader);
+extern yaidsPcapPacketHeaderNet_ptr yaidspcap_parse_pcap_headers_net(etherHeader_ptr etherHeader, ipHeader_ptr ipHeader);
+extern yaidsPcapPacketHeaderTransport_ptr yaidspcap_parse_pcap_headers_transport(yaidsPcapPacket_ptr packet, ipHeader_ptr ipHeader);
+extern char* yaidspcap_parse_pcap_headers_get_nettype(etherHeader_ptr etherHeader);
+extern char* yaidspcap_parse_pcap_headers_get_transporttype(ipHeader_ptr ipHeader);
+extern void yaidspcap_parse_pcap_headers_results(yaidsPcapPacketHeader_ptr parsedPacketHeaders, yaidsPcapPacketHeaderFrame_ptr frameHeader, yaidsPcapPacketHeaderNet_ptr netHeader, yaidsPcapPacketHeaderTransport_ptr transportHeader);
 extern void yaidspcap_parse_pcap_headers(yaidsPcapPacket_ptr packet,
                                          yaidsPcapPacketHeader_ptr
                                          parsedPacketHeaders);

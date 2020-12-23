@@ -45,6 +45,7 @@ extern void yaidsio_print_arg_line(char *opt, char *type, char *desc);
 extern void yaidsio_help(char *exe);
 extern void yaidsio_version(void);
 extern yaidsConfig yaidsio_getopts(int argc, char **argv);
+extern void yaidsio_print_config_debug(yaidsConfig_ptr config);
 extern void yaidsio_exit_error(int errorCode);
 extern void yaidsio_print_started(void);
 extern void yaidsio_print_exiting(void);

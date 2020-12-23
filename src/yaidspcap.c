@@ -33,11 +33,13 @@
  *
  */
 
+#include <config.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <malloc.h>
 #include <yaids.h>
 #include <yaidstypes.h>
 #include <yaidsconf.h>
@@ -74,18 +76,18 @@ extern yaidsPcapPacket_ptr yaidspcap_new_packet(int size)
     return packet;
 }
 
-extern int yaidspcap_create_handle(yaidsConfig config,
+extern int yaidspcap_create_handle(yaidsConfig_ptr config,
                                    yaidsPcapHandle_ptr pcapHandle)
 {
     yaidspcap_init(pcapHandle);
 
-    if (config.read_pcap_file) {
+    if (config->read_pcap_file) {
         pcapHandle->pcapHandle =
-            pcap_open_offline(config.pcapInputFile,
+            pcap_open_offline(config->pcapInputFile,
                               pcapHandle->errorBuffer);
     } else {
         pcapHandle->pcapHandle =
-            pcap_open_live(config.pcapDevice, BUFSIZ, 0,
+            pcap_open_live(config->pcapDevice, BUFSIZ, 0,
                            pcapHandle->pcapTimeout,
                            pcapHandle->errorBuffer);
     }
@@ -118,14 +120,17 @@ extern void yaidspcap_read_callback(u_char * args,
     yaidsConfig_ptr config = callbackArgs->config;
     yaidsPacketCounts_ptr packetCounts = callbackArgs->packetCounts;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
-    malloc_trim(32);
-#pragma GCC diagnostic pop
+#ifdef HAVE_MALLOC_TRIM
+        malloc_trim(32);
+
+        if (config->debug > 1)
+            yaidsio_print_debug_line("Flushing Memory [Output Thread: %u]",
+                                     (unsigned int)pthread_self());
+#endif
 
     if (config->debug > 1)
         yaidsio_print_debug_line("Flushing Memory [PCAP Thread: %u]",
-                                 pthread_self());
+                                 (int)pthread_self());
 
     struct pcap_pkthdr *copyPacketHeader =
         calloc(sizeof(struct pcap_pkthdr), sizeof(int));
@@ -142,341 +147,305 @@ extern void yaidspcap_read_callback(u_char * args,
     yaidsPcapPacket->packetBody = packetBody;
 
     if (config->debug)
-        yaidsio_print_debug_line("Pakcet Captured: %p (Size: %d)",
+        yaidsio_print_debug_line("Pakcet Captured: %p (Size: %d, TS: %d)",
                                  yaidsPcapPacket,
-                                 yaidsPcapPacket->packetSize);
+                                 yaidsPcapPacket->packetSize, (int)yaidsPcapPacket->packetHeader->ts.tv_sec);
 
     if (config->read_pcap_file) yaidsthread_update_pcap_packet_count(packetCounts);
     yaidsthread_add_input_data(yaidsInputQueue, yaidsPcapPacket);
-    
-    free(copyPacketHeader);
+}
+
+extern yaidsPcapPacketHeaderFrame_ptr yaidspcap_parse_pcap_headers_frame(etherHeader_ptr etherHeader)
+{
+    yaidsPcapPacketHeaderFrame_ptr frameHeader;
+    frameHeader = calloc(sizeof(yaidsPcapPacketHeaderFrame), sizeof(char));
+
+    frameHeader->type[0] = '\0';
+    frameHeader->source[0] = '\0';
+    frameHeader->dest[0] = '\0';
+
+    strncpy(frameHeader->type, "ETH", 12);
+    strncpy(frameHeader->source, ether_ntoa((struct ether_addr *) etherHeader->ether_shost), INET6_ADDRSTRLEN);
+    strncpy(frameHeader->dest, ether_ntoa((struct ether_addr *) etherHeader->ether_dhost), INET6_ADDRSTRLEN);
+
+    return frameHeader;
+}
+
+extern yaidsPcapPacketHeaderNet_ptr yaidspcap_parse_pcap_headers_net(etherHeader_ptr etherHeader, ipHeader_ptr ipHeader)
+{
+    yaidsPcapPacketHeaderNet_ptr netHeader;
+    netHeader = calloc(sizeof(yaidsPcapPacketHeaderNet), sizeof(char));
+
+    netHeader->type[0] = '\0';
+    netHeader->source[0] = '\0';
+    netHeader->dest[0] = '\0';
+
+    strncpy(netHeader->type, yaidspcap_parse_pcap_headers_get_nettype(etherHeader), 12);
+
+    if (ipHeader != NULL) {
+        char sourceIP[INET6_ADDRSTRLEN];
+        char destIP[INET6_ADDRSTRLEN];
+
+        inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIP,
+                  INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &(ipHeader->ip_dst), destIP,
+                  INET_ADDRSTRLEN);
+
+    strncpy(netHeader->source, sourceIP, INET6_ADDRSTRLEN);
+    strncpy(netHeader->dest, destIP, INET6_ADDRSTRLEN);
+    }
+
+    return netHeader;
+}
+
+extern yaidsPcapPacketHeaderTransport_ptr yaidspcap_parse_pcap_headers_transport(yaidsPcapPacket_ptr packet, ipHeader_ptr ipHeader)
+{
+    yaidsPcapPacketHeaderTransport_ptr transportHeader;
+    transportHeader = calloc(sizeof(yaidsPcapPacketHeaderTransport), sizeof(char));
+
+    transportHeader->type[0] = '\0';
+    transportHeader->source[0] = '\0';
+    transportHeader->dest[0] = '\0';
+
+    strncpy(transportHeader->type, yaidspcap_parse_pcap_headers_get_transporttype(ipHeader), 12);
+
+    u_int sourcePort;
+    u_int destPort;
+
+    if (ipHeader->ip_p == IPPROTO_TCP) {
+        tcpHeader_ptr tcpHeader;
+        tcpHeader = (struct tcphdr *) (packet->packetBody +
+                               sizeof(struct ether_header) +
+                               sizeof(struct ip));
+
+        sourcePort = ntohs(tcpHeader->source);
+        destPort = ntohs(tcpHeader->dest);
+
+        snprintf(transportHeader->source, 8, "%d", sourcePort);
+        snprintf(transportHeader->dest, 8, "%d", destPort);
+
+    } else if (ipHeader->ip_p == IPPROTO_UDP) {
+        udpHeader_ptr udpHeader;
+        udpHeader = (struct udphdr *) (packet->packetBody +
+                               sizeof(struct ether_header) +
+                               sizeof(struct ip));
+
+        sourcePort = ntohs(udpHeader->source);
+        destPort = ntohs(udpHeader->dest);
+
+        snprintf(transportHeader->source, 8, "%d", sourcePort);
+        snprintf(transportHeader->dest, 8, "%d", destPort);
+    }
+
+    return transportHeader;
+}
+
+extern char* yaidspcap_parse_pcap_headers_get_nettype(etherHeader_ptr etherHeader) //LGTM[cpp/poorly-documented-function] - Lengthy SWITCH
+{
+    switch (ntohs(etherHeader->ether_type)) {
+        case ETHERTYPE_IP:
+            return "IP";
+            break;
+        case ETHERTYPE_8021AD:
+            return "8021AD";
+            break;
+        case ETHERTYPE_8021Q:
+            return "8021Q";
+            break;
+        case ETHERTYPE_8021QINQ:
+            return "8021QINQ";
+            break;
+        case ETHERTYPE_AARP:
+            return "AARP";
+            break;
+        case ETHERTYPE_ARP:
+            return "ARP";
+            break;
+        case ETHERTYPE_ATALK:
+            return "ATALK";
+            break;
+        case ETHERTYPE_DECDNS:
+            return "DECDNS";
+            break;
+        case ETHERTYPE_DECDTS:
+            return "DECDTS";
+            break;
+        case ETHERTYPE_DN:
+            return "DN";
+            break;
+        case ETHERTYPE_IPV6:
+            return "IPV6";
+            break;
+        case ETHERTYPE_IPX:
+            return "IPX";
+            break;
+        case ETHERTYPE_LANBRIDGE:
+            return "LANBRIDGE";
+            break;
+        case ETHERTYPE_LAT:
+            return "LAT";
+            break;
+        case ETHERTYPE_LOOPBACK:
+            return "LOOPBACK";
+            break;
+        case ETHERTYPE_MOPDL:
+            return "MOPDL";
+            break;
+        case ETHERTYPE_MOPRC:
+            return "MOPRC";
+            break;
+        case ETHERTYPE_MPLS:
+            return "MPLS";
+            break;
+        case ETHERTYPE_MPLS_MULTI:
+            return "MPLS_MULTI";
+            break;
+        case ETHERTYPE_NS:
+            return "NS";
+            break;
+        case ETHERTYPE_PPP:
+            return "PPP";
+            break;
+        case ETHERTYPE_PPPOED:
+            return "PPPOED";
+            break;
+        case ETHERTYPE_PPPOES:
+            return "PPPOES";
+            break;
+        case ETHERTYPE_PUP:
+            return "PUP";
+            break;
+        case ETHERTYPE_REVARP:
+            return "REVARP";
+            break;
+        case ETHERTYPE_SCA:
+            return "SCA";
+            break;
+        case ETHERTYPE_SPRITE:
+            return "SPRITE";
+            break;
+        case ETHERTYPE_TEB:
+            return "TEB";
+            break;
+        case ETHERTYPE_TRAIL:
+            return "TRAIL";
+            break;
+        case ETHERTYPE_VEXP:
+            return "VEXP";
+            break;
+        case ETHERTYPE_VPROD:
+            return "VPROD";
+            break;
+        default:
+            return "UNKN";
+            break;
+    }
+}
+
+extern char* yaidspcap_parse_pcap_headers_get_transporttype(ipHeader_ptr ipHeader)
+{
+    switch (ipHeader->ip_p) {
+        case IPPROTO_TCP:
+            return "TCP";
+            break;
+        case IPPROTO_UDP:
+            return "UDP";
+            break;
+        case IPPROTO_ICMP:
+            return "ICMP";
+            break;
+        default:
+            return "UNKN";
+            break;
+    }
+}
+
+extern void yaidspcap_parse_pcap_headers_results(yaidsPcapPacketHeader_ptr parsedPacketHeaders, yaidsPcapPacketHeaderFrame_ptr frameHeader, yaidsPcapPacketHeaderNet_ptr netHeader, yaidsPcapPacketHeaderTransport_ptr transportHeader)
+{
+    if (transportHeader != NULL) {
+        parsedPacketHeaders->frameExists = true;
+        parsedPacketHeaders->netExists = true;
+        parsedPacketHeaders->transportExists = true;
+
+        snprintf(parsedPacketHeaders->typeList, 42, "%s/%s/%s", frameHeader->type, netHeader->type,
+                 transportHeader->type);
+
+        strncpy(parsedPacketHeaders->frameSource, frameHeader->source, INET6_ADDRSTRLEN + 1);
+        strncpy(parsedPacketHeaders->frameDest, frameHeader->dest, INET6_ADDRSTRLEN + 1);
+
+        strncpy(parsedPacketHeaders->netSource, netHeader->source, INET6_ADDRSTRLEN + 1);
+        strncpy(parsedPacketHeaders->netDest, netHeader->dest, INET6_ADDRSTRLEN + 1);
+
+        strncpy(parsedPacketHeaders->transportSource, transportHeader->source, 10);
+        strncpy(parsedPacketHeaders->transportDest, transportHeader->dest, 10);
+    } else if (netHeader != NULL) {
+        parsedPacketHeaders->frameExists = true;
+        parsedPacketHeaders->netExists = true;
+
+        snprintf(parsedPacketHeaders->typeList, 42, "%s/%s", frameHeader->type, netHeader->type);
+
+        strncpy(parsedPacketHeaders->frameSource, frameHeader->source, INET6_ADDRSTRLEN + 1);
+        strncpy(parsedPacketHeaders->frameDest, frameHeader->dest, INET6_ADDRSTRLEN + 1);
+
+        strncpy(parsedPacketHeaders->netSource, netHeader->source, INET6_ADDRSTRLEN + 1);
+        strncpy(parsedPacketHeaders->netDest, netHeader->dest, INET6_ADDRSTRLEN + 1);
+    } else if (frameHeader != NULL) {
+        parsedPacketHeaders->frameExists = true;
+
+        snprintf(parsedPacketHeaders->typeList, 42, "%s", frameHeader->type);
+
+        strncpy(parsedPacketHeaders->frameSource, frameHeader->source, INET6_ADDRSTRLEN + 1);
+        strncpy(parsedPacketHeaders->frameDest, frameHeader->dest, INET6_ADDRSTRLEN + 1);
+    }
 }
 
 extern void yaidspcap_parse_pcap_headers(yaidsPcapPacket_ptr packet,
                                          yaidsPcapPacketHeader_ptr
                                          parsedPacketHeaders)
 {
-    int frameSourceSize;
-    int frameDestSize;
-    int netSourceSize;
-    int netDestSize;
-    int transportSourceSize;
-    int transportDestSize;
-    char *transportSource;
-    char *transportDest;
-    char *typeList;
-    char *frameSource;
-    char *frameDest;
-    char *netSource;
-    char *netDest;
-    char *frameType;
-    char *netType;
-    char *transportType;
-
-    typeList = calloc(32, sizeof(char));
-    frameSource = NULL;
-    frameDest = NULL;
-    netSource = NULL;
-    netDest = NULL;
-    transportSource = calloc(8, sizeof(char));
-    transportDest = calloc(8, sizeof(char));
-    frameType = calloc(10, sizeof(char));
-    netType = calloc(12, sizeof(char));
-    transportType = calloc(10, sizeof(char));
-
     parsedPacketHeaders->frameExists = false;
     parsedPacketHeaders->netExists = false;
     parsedPacketHeaders->transportExists = false;
 
-    strncpy(parsedPacketHeaders->typeList, "UNKN", 4);
-    parsedPacketHeaders->typeList[strlen("UNKN") + 1] = '\0';
-    parsedPacketHeaders->typeList[31] = '\0';
-    parsedPacketHeaders->frameSource[0] = '\0';
-    parsedPacketHeaders->frameDest[0] = '\0';
-    parsedPacketHeaders->netSource[0] = '\0';
-    parsedPacketHeaders->netDest[0] = '\0';
-    parsedPacketHeaders->transportSource[0] = '\0';
-    parsedPacketHeaders->transportDest[0] = '\0';
+    yaidsPcapPacketHeaderFrame_ptr frameHeader;
+    yaidsPcapPacketHeaderNet_ptr netHeader;
+    yaidsPcapPacketHeaderTransport_ptr transportHeader;
+    frameHeader = NULL;
+    netHeader = NULL;
+    transportHeader = NULL;
 
-    if (packet->packetHeader->caplen > ETH_HEADER_SIZE) {
-        struct ether_header *etherHeader;
-        struct ip *ipHeader;
+    if (packet->packetHeader->len > ETH_HEADER_SIZE) {
+        etherHeader_ptr etherHeader;
+        ipHeader_ptr ipHeader;
 
-        etherHeader = (struct ether_header *) packet->packetBody;
+        etherHeader = NULL;
+        ipHeader = NULL;
 
-        strncpy(frameType, "ETH", 10);
-        frameSource =
-            ether_ntoa((struct ether_addr *) etherHeader->ether_shost);
-        frameDest =
-            ether_ntoa((struct ether_addr *) etherHeader->ether_dhost);
-
-        switch (ntohs(etherHeader->ether_type)) {
-            case ETHERTYPE_IP:
-                strncpy(netType, "IP", 12);
-                break;
-            case ETHERTYPE_8021AD:
-                strncpy(netType, "8021AD", 12);
-                break;
-            case ETHERTYPE_8021Q:
-                strncpy(netType, "8021Q", 12);
-                break;
-            case ETHERTYPE_8021QINQ:
-                strncpy(netType, "8021QINQ", 12);
-                break;
-            case ETHERTYPE_AARP:
-                strncpy(netType, "AARP", 12);
-                break;
-            case ETHERTYPE_ARP:
-                strncpy(netType, "ARP", 12);
-                break;
-            case ETHERTYPE_ATALK:
-                strncpy(netType, "ATALK", 12);
-                break;
-            case ETHERTYPE_DECDNS:
-                strncpy(netType, "DECDNS", 12);
-                break;
-            case ETHERTYPE_DECDTS:
-                strncpy(netType, "DECDTS", 12);
-                break;
-            case ETHERTYPE_DN:
-                strncpy(netType, "DN", 12);
-                break;
-            case ETHERTYPE_IPV6:
-                strncpy(netType, "IPV6", 12);
-                break;
-            case ETHERTYPE_IPX:
-                strncpy(netType, "IPX", 12);
-                break;
-            case ETHERTYPE_LANBRIDGE:
-                strncpy(netType, "LANBRIDGE", 12);
-                break;
-            case ETHERTYPE_LAT:
-                strncpy(netType, "LAT", 12);
-                break;
-            case ETHERTYPE_LOOPBACK:
-                strncpy(netType, "LOOPBACK", 12);
-                break;
-            case ETHERTYPE_MOPDL:
-                strncpy(netType, "MOPDL", 12);
-                break;
-            case ETHERTYPE_MOPRC:
-                strncpy(netType, "MOPRC", 12);
-                break;
-            case ETHERTYPE_MPLS:
-                strncpy(netType, "MPLS", 12);
-                break;
-            case ETHERTYPE_MPLS_MULTI:
-                strncpy(netType, "MPLS_MULTI", 12);
-                break;
-            case ETHERTYPE_NS:
-                strncpy(netType, "NS", 12);
-                break;
-            case ETHERTYPE_PPP:
-                strncpy(netType, "PPP", 12);
-                break;
-            case ETHERTYPE_PPPOED:
-                strncpy(netType, "PPPOED", 12);
-                break;
-            case ETHERTYPE_PPPOES:
-                strncpy(netType, "PPPOES", 12);
-                break;
-            case ETHERTYPE_PUP:
-                strncpy(netType, "PUP", 12);
-                break;
-            case ETHERTYPE_REVARP:
-                strncpy(netType, "REVARP", 12);
-                break;
-            case ETHERTYPE_SCA:
-                strncpy(netType, "SCA", 12);
-                break;
-            case ETHERTYPE_SPRITE:
-                strncpy(netType, "SPRITE", 12);
-                break;
-            case ETHERTYPE_TEB:
-                strncpy(netType, "TEB", 12);
-                break;
-            case ETHERTYPE_TRAIL:
-                strncpy(netType, "TRAIL", 12);
-                break;
-            case ETHERTYPE_VEXP:
-                strncpy(netType, "VEXP", 12);
-                break;
-            case ETHERTYPE_VPROD:
-                strncpy(netType, "VPROD", 12);
-                break;
-            default:
-                strncpy(netType, "UNKN", 12);
-                break;
-        }
+        etherHeader = (etherHeader_ptr)packet->packetBody;
+        frameHeader = yaidspcap_parse_pcap_headers_frame(etherHeader);
 
         if (ntohs(etherHeader->ether_type) == ETHERTYPE_IP
             || ntohs(etherHeader->ether_type) == ETHERTYPE_IPV6) {
-            char sourceIP[INET6_ADDRSTRLEN];
-            char destIP[INET6_ADDRSTRLEN];
-
             ipHeader =
-                (struct ip *) (packet->packetBody +
-                               sizeof(struct ether_header));
+            (struct ip *) (packet->packetBody +
+                           sizeof(struct ether_header));
 
-            inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIP,
-                      INET_ADDRSTRLEN);
-            inet_ntop(AF_INET, &(ipHeader->ip_dst), destIP,
-                      INET_ADDRSTRLEN);
-
-            netSource = sourceIP;
-            netDest = destIP;
-
-            switch (ipHeader->ip_p) {
-                case IPPROTO_TCP:
-                    strncpy(transportType, "TCP", 10);
-                    break;
-                case IPPROTO_UDP:
-                    strncpy(transportType, "UDP", 10);
-                    break;
-                case IPPROTO_ICMP:
-                    strncpy(transportType, "ICMP", 10);
-                    break;
-                default:
-                    strncpy(transportType, "UNKN", 10);
-                    break;
-            }
-
-            if ((ipHeader->ip_p == IPPROTO_TCP)
-                || (ipHeader->ip_p == IPPROTO_UDP)) {
-                u_int sourcePort;
-                u_int destPort;
-
-                if (ipHeader->ip_p == IPPROTO_TCP) {
-                    struct tcphdr *tcpHeader;
-                    tcpHeader =
-                        (struct tcphdr *) (packet->packetBody +
-                                           sizeof(struct ether_header) +
-                                           sizeof(struct ip));
-                    sourcePort = ntohs(tcpHeader->source);
-                    destPort = ntohs(tcpHeader->dest);
-                } else {
-                    struct udphdr *udpHeader;
-                    udpHeader =
-                        (struct udphdr *) (packet->packetBody +
-                                           sizeof(struct ether_header) +
-                                           sizeof(struct ip));
-                    sourcePort = ntohs(udpHeader->source);
-                    destPort = ntohs(udpHeader->dest);
-                }
-
-                snprintf(transportSource, 8, "%d", sourcePort);
-                snprintf(transportDest, 8, "%d", destPort);
-            }
+            netHeader = yaidspcap_parse_pcap_headers_net(etherHeader, ipHeader);
+            transportHeader = yaidspcap_parse_pcap_headers_transport(packet, ipHeader);
+        } else {
+            netHeader = yaidspcap_parse_pcap_headers_net(etherHeader, ipHeader);
         }
+    } else if (packet->packetHeader->len == ETH_HEADER_SIZE) {
+        strncpy(parsedPacketHeaders->typeList, "ETH", 10);
     } else {
-        strncpy(frameType, "ETH", 10);
+        strncpy(parsedPacketHeaders->typeList, "UNKN", 10);
     }
 
-    memset(typeList, 0, 32 * (sizeof(parsedPacketHeaders->typeList[0])));
-    if (transportType != NULL
-        && (strncmp(transportType, "", 10) != YAIDS_SUCCESS)
-        && (strncmp(netType, "UNKN", 10) != YAIDS_SUCCESS)) {
-        snprintf(typeList, 32, "%s/%s/%s", frameType, netType,
-                 transportType);
-    } else if (netType != NULL
-               && (strncmp(frameType, "UNKN", 10) != YAIDS_SUCCESS)) {
-        snprintf(typeList, 32, "%s/%s", frameType, netType);
-    } else {
-        snprintf(typeList, 32, "%s", frameType);
-    }
+    yaidspcap_parse_pcap_headers_results(parsedPacketHeaders, frameHeader, netHeader, transportHeader);
 
-    if (frameType != NULL
-        && (strncmp(frameType, "ETH", 10) == YAIDS_SUCCESS)
-        && frameSource != NULL && frameDest != NULL) {
-        parsedPacketHeaders->frameExists = true;
-
-        memset(parsedPacketHeaders->typeList, 0,
-               32 * (sizeof parsedPacketHeaders->typeList[0]));
-        strncpy(parsedPacketHeaders->typeList, typeList,
-                fmin(32, strlen(typeList)));
-
-        memset(parsedPacketHeaders->frameSource, 0,
-               (INET6_ADDRSTRLEN +
-                1) * (sizeof parsedPacketHeaders->frameSource[0]));
-        strncpy(parsedPacketHeaders->frameSource, frameSource,
-                fmin((INET6_ADDRSTRLEN + 1), strlen(frameSource)));
-        frameSourceSize =
-            fmin(((INET6_ADDRSTRLEN + 1) - 1), strlen(frameSource)) + 1;
-        parsedPacketHeaders->frameSource[frameSourceSize] = '\0';
-        parsedPacketHeaders->frameSource[INET6_ADDRSTRLEN] = '\0';
-
-        memset(parsedPacketHeaders->frameDest, 0,
-               (INET6_ADDRSTRLEN +
-                1) * (sizeof parsedPacketHeaders->frameDest[0]));
-        strncpy(parsedPacketHeaders->frameDest, frameDest,
-                fmin((INET6_ADDRSTRLEN + 1), strlen(frameDest)));
-        frameDestSize =
-            fmin(((INET6_ADDRSTRLEN + 1) - 1), strlen(frameDest)) + 1;
-        parsedPacketHeaders->frameDest[frameDestSize] = '\0';
-        parsedPacketHeaders->frameDest[INET6_ADDRSTRLEN] = '\0';
-
-        if ((netType != NULL && netSource != NULL && netDest != NULL)
-            && ((strncmp(netType, "IP", 10) == YAIDS_SUCCESS)
-                || (strncmp(frameType, "IPV6", 10) == YAIDS_SUCCESS))) {
-            parsedPacketHeaders->netExists = true;
-
-            memset(parsedPacketHeaders->netSource, 0,
-                   (INET6_ADDRSTRLEN +
-                    1) * (sizeof parsedPacketHeaders->netSource[0]));
-            strncpy(parsedPacketHeaders->netSource, netSource,
-                    fmin((INET6_ADDRSTRLEN + 1), strlen(netSource)));
-            netSourceSize =
-                fmin(((INET6_ADDRSTRLEN + 1) - 1), strlen(netSource)) + 1;
-            parsedPacketHeaders->netSource[netSourceSize] = '\0';
-            parsedPacketHeaders->netSource[INET6_ADDRSTRLEN] = '\0';
-
-            memset(parsedPacketHeaders->netDest, 0,
-                   (INET6_ADDRSTRLEN +
-                    1) * (sizeof parsedPacketHeaders->netDest[0]));
-            strncpy(parsedPacketHeaders->netDest, netDest,
-                    fmin((INET6_ADDRSTRLEN + 1), strlen(netDest)));
-            netDestSize =
-                fmin(((INET6_ADDRSTRLEN + 1) - 1), strlen(netDest)) + 1;
-            parsedPacketHeaders->netDest[netDestSize] = '\0';
-            parsedPacketHeaders->netDest[INET6_ADDRSTRLEN] = '\0';
-
-            if ((transportType != NULL && transportSource != NULL
-                 && transportDest != NULL)
-                && ((strncmp(transportType, "TCP", 10) == YAIDS_SUCCESS)
-                    || (strncmp(transportType, "UDP", 10) ==
-                        YAIDS_SUCCESS))) {
-                parsedPacketHeaders->transportExists = true;
-
-                memset(parsedPacketHeaders->transportSource, 0,
-                       8 *
-                       (sizeof parsedPacketHeaders->transportSource[0]));
-                strncpy(parsedPacketHeaders->transportSource,
-                        transportSource, fmin(8, strlen(transportSource)));
-                transportSourceSize =
-                    fmin((8 - 1), strlen(transportSource)) + 1;
-                parsedPacketHeaders->transportSource[transportSourceSize] =
-                    '\0';
-                parsedPacketHeaders->transportSource[7] = '\0';
-
-                memset(parsedPacketHeaders->transportDest, 0,
-                       8 * (sizeof parsedPacketHeaders->transportDest[0]));
-                strncpy(parsedPacketHeaders->transportDest, transportDest,
-                        fmin(8, strlen(transportDest)));
-                transportDestSize =
-                    fmin((8 - 1), strlen(transportDest)) + 1;
-                parsedPacketHeaders->transportDest[transportDestSize] =
-                    '\0';
-                parsedPacketHeaders->transportDest[7] = '\0';
-            }
-        }
-    }
-
-    free(typeList);
-    free(transportSource);
-    free(transportDest);
-    free(frameType);
-    free(netType);
-    free(transportType);
+    free(frameHeader);
+    free(netHeader);
+    free(transportHeader);
 }
 
 extern FILE *yaidspcap_open_output_pcap_file(yaidsPcapHandle_ptr

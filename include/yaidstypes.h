@@ -57,6 +57,9 @@ typedef struct yaidsPcapCallbackArgs_struct yaidsPcapCallbackArgs;
 typedef struct yaidsPcapHandle_struct yaidsPcapHandle;
 typedef struct yaidsPcapPacket_struct yaidsPcapPacket;
 typedef struct yaidsPcapPacketHeader_struct yaidsPcapPacketHeader;
+typedef struct yaidsPcapPacketHeaderFrame_struct yaidsPcapPacketHeaderFrame;
+typedef struct yaidsPcapPacketHeaderNet_struct yaidsPcapPacketHeaderNet;
+typedef struct yaidsPcapPacketHeaderTransport_struct yaidsPcapPacketHeaderTransport;
 typedef struct yaidsThreadInfo_struct yaidsThreadInfo;
 typedef struct yaidsThreadList_struct yaidsThreadList;
 typedef struct yaidsThreadReturn_struct yaidsThreadReturn;
@@ -78,6 +81,9 @@ typedef yaidsPcapCallbackArgs *yaidsPcapCallbackArgs_ptr;
 typedef yaidsPcapHandle *yaidsPcapHandle_ptr;
 typedef yaidsPcapPacket *yaidsPcapPacket_ptr;
 typedef yaidsPcapPacketHeader *yaidsPcapPacketHeader_ptr;
+typedef yaidsPcapPacketHeaderFrame *yaidsPcapPacketHeaderFrame_ptr;
+typedef yaidsPcapPacketHeaderNet *yaidsPcapPacketHeaderNet_ptr;
+typedef yaidsPcapPacketHeaderTransport *yaidsPcapPacketHeaderTransport_ptr;
 typedef yaidsThreadInfo *yaidsThreadInfo_ptr;
 typedef yaidsThreadList *yaidsThreadList_ptr;
 typedef yaidsThreadReturn *yaidsThreadReturn_ptr;
@@ -86,6 +92,11 @@ typedef yaidsTimelimitThreadArgs *yaidsTimelimitThreadArgs_ptr;
 typedef yaidsYaraCallbackArgs *yaidsYaraCallbackArgs_ptr;
 typedef yaidsYaraScanner *yaidsYaraScanner_ptr;
 typedef yaidsYaraThreadArgs *yaidsYaraThreadArgs_ptr;
+
+typedef struct ether_header *etherHeader_ptr;
+typedef struct ip *ipHeader_ptr;
+typedef struct tcphdr *tcpHeader_ptr;
+typedef struct udphdr *udpHeader_ptr;
 
 typedef struct yaidsConfig_struct {
     int status;
@@ -207,7 +218,7 @@ typedef struct yaidsYaraCallbackArgs_struct {
 } yaidsYaraCallbackArgs;
 
 typedef struct yaidsTimelimitThreadArgs_struct {
-    int *yaidsRunning;
+    bool *yaidsRunning;
     yaidsConfig_ptr config;
 } yaidsTimelimitThreadArgs;
 
@@ -222,13 +233,31 @@ typedef struct yaidsPcapPacketHeader_struct {
     bool frameExists;
     bool netExists;
     bool transportExists;
-    char typeList[32];
+    char typeList[42];
     char frameSource[INET6_ADDRSTRLEN + 1];
     char frameDest[INET6_ADDRSTRLEN + 1];
     char netSource[INET6_ADDRSTRLEN + 1];
     char netDest[INET6_ADDRSTRLEN + 1];
-    char transportSource[8];
-    char transportDest[8];
+    char transportSource[10];
+    char transportDest[10];
 } yaidsPcapPacketHeader;
+
+typedef struct yaidsPcapPacketHeaderFrame_struct {
+    char type[14];
+    char source[INET6_ADDRSTRLEN + 1];
+    char dest[INET6_ADDRSTRLEN + 1];
+} yaidsPcapPacketHeaderFrame;
+
+typedef struct yaidsPcapPacketHeaderNet_struct {
+    char type[14];
+    char source[INET6_ADDRSTRLEN + 1];
+    char dest[INET6_ADDRSTRLEN + 1];
+} yaidsPcapPacketHeaderNet;
+
+typedef struct yaidsPcapPacketHeaderTransport_struct {
+    char type[14];
+    char source[10];
+    char dest[10];
+} yaidsPcapPacketHeaderTransport;
 
 #endif
