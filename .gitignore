@@ -1,0 +1,27 @@
+# Build Files
+*.in
+*.in~
+*.m4
+*.o
+*.Po
+/autoscan-*.log
+/autoscan.log
+autom4te.cache
+compile
+config.h.in
+config.log
+config.status
+configure
+depcomp
+install-sh
+Makefile
+missing
+src/.deps
+stamp-h1
+
+# Binary Files
+src/yaids
+
+# Output Files
+yaids.*.log
+yaids.*.pcap

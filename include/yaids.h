@@ -61,10 +61,20 @@ extern const char *PROGRAM_SUBLINE;
 extern const char *PROGRAM_DESCRIPTION;
 extern const char *PROGRAM_VERSION;
 
-extern _Bool global_yaidsRunning;
+extern bool global_yaidsRunning;
 
 extern void yaids_signal(int signalValue);
-extern _Bool verify_status(int statusCode);
+extern bool verify_status(int statusCode);
 extern int main(int argc, char **argv);
+
+#ifdef HAVE_STRLCPY
+#ifndef sec_str_cpy
+#define sec_str_cpy strlcpy
+#endif
+#else
+#ifndef sec_str_cpy
+#define sec_str_cpy strncpy
+#endif
+#endif
 
 #endif

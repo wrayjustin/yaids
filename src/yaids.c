@@ -70,7 +70,7 @@ extern void yaids_signal(int signalValue)
     }
 }
 
-extern _Bool verify_status(int statusCode)
+extern bool verify_status(int statusCode)
 {
     if (statusCode != YAIDS_SUCCESS) {
         yaidsio_exit_error(statusCode);

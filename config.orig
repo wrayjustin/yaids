@@ -3,3 +3,6 @@
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "devel"
+
+/* STDBOOL is REQUIRED */
+#define HAVE_STDBOOL_H 1

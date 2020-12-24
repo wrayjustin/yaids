@@ -59,7 +59,7 @@ extern void yaidsio_print_debug_line(const char *format, ...)
     status = vsnprintf(line, sizeof(line), format, args);
     va_end(args);
 
-    if (status > YAIDS_SUCCESS) {
+    if ((status > YAIDS_SUCCESS) && (global_yaidsRunning)) {
         fprintf(stderr, "[DEBUG]\t\t%s\n", line);
     }
 }
@@ -240,6 +240,7 @@ extern yaidsConfig yaidsio_getopts(int argc, char **argv)
     for (optidx = optind; optidx < argc; optidx++) {
         yaidsio_help(argv[0]);
         config.status = YAIDS_INVALID_ARGUMENTS;
+        return config;
     }
 
     config.status = YAIDS_PENDING_CONFIG;

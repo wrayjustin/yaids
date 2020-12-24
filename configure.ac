@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([yaids], [0.0.2], [wray.justin@gmail.com])
+AC_INIT([yaids], [0.0.3], [wray.justin@gmail.com])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 
@@ -14,6 +14,7 @@ AC_PROG_CC
 
 # Checks for libraries.
 AC_SEARCH_LIBS([fmin], [m],, AC_ERROR([Missing libc6-dev and/or libpthread-stubs0-dev Library]))
+AC_SEARCH_LIBS([strlcpy], [bsd],, AC_WARN([Missing libbsd-dev Library ... using less secure strncpy]))
 AC_SEARCH_LIBS([pthread_create], [pthread],, AC_ERROR([Missing libc6-dev and/or libpthread-stubs0-dev Library]))
 AC_SEARCH_LIBS([pthread_detach], [pthread],, AC_ERROR([Missing libc6-dev and/or libpthread-stubs0-dev Library]))
 AC_SEARCH_LIBS([pthread_mutex_lock], [pthread],, AC_ERROR([Missing libc6-dev and/or libpthread-stubs0-dev Library]))
@@ -29,6 +30,7 @@ AC_SEARCH_LIBS([yr_scanner_set_callback], [yara],, AC_ERROR([Missing yara and/or
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h],, AC_ERROR([Missing libc6-dev Header]))
+AC_CHECK_HEADERS([bsd/string.h],, AC_WARN([Missing libbsd-dev Library ... using less secure strncpy]))
 AC_CHECK_HEADERS([ctype.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([fcntl.h],, AC_ERROR([Missing libc6-dev Header]))
 AC_CHECK_HEADERS([malloc.h],, AC_ERROR([Missing libc6-dev Header]))
@@ -60,17 +62,34 @@ AC_CHECK_HEADERS([yara/types.h],, AC_ERROR([Missing libyara-dev Header]))
 AC_CHECK_HEADER_STDBOOL
 
 # Checks for library functions.
-AC_CHECK_FUNCS([memset strdup])
+AC_CHECK_FUNCS([memset strndup])
 AC_CHECK_FUNCS([gmtime_r])
 AC_CHECK_FUNCS([malloc_trim])
+AC_CHECK_FUNCS([strlcpy])
+
+# Fortify
+AC_ARG_ENABLE([fortify2],
+  [AS_HELP_STRING([--disable-fortify2], [compiles with -D_FORTIFY_SOURCE=2 option; compile-time and run-time security checks (Default: Enabled)])],
+  [if test x$enableval = xyes; then
+    CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=1"
+  fi],
+  [
+    CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
+  ])
+AC_ARG_ENABLE([fortify1],
+  [AS_HELP_STRING([--enable-fortify1], [compiles with -D_FORTIFY_SOURCE=1 option; compile-time only security checks (Default: Disabled)])],
+  [if test x$enableval = xyes; then
+    CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=1"
+  fi])
 
 # Debug
 AC_ARG_ENABLE([debug],
-  [AS_HELP_STRING([--enable-debug], [compiles with -pg option])],
+  [AS_HELP_STRING([--enable-debug], [compiles with -pg -g -ggdb options (Default: Disabled)])],
   [if test x$enableval = xyes; then
-    CFLAGS=" -pg -g -ggdb $CFLAGS"
+    CFLAGS="-pg -g -ggdb $CFLAGS"
   fi])
 
+# Makefiles
 AC_CONFIG_FILES([
  Makefile
  src/Makefile

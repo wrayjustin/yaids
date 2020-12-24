@@ -123,7 +123,7 @@ extern void yaidsconf_config_init(yaidsConfig_ptr config, char* exeName, int opt
             epochTM = gmtime(&timestamp);
 #endif
             strftime(epochString, 32, "%s", epochTM);
-            config->outputPrefix = strdup(epochString);
+            config->outputPrefix = strndup(epochString, strlen(epochString));
         }
 
         if (!config->outputPath) {

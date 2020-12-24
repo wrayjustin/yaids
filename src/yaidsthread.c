@@ -324,6 +324,9 @@ yaidsthread_get_input_data(yaidsInputDataQueue_ptr dataQueue)
     yaidsInputDataNode_ptr queuedDataNode;
     yaidsInputDataNode nodeData;
 
+    nodeData.nextNode = NULL;
+    nodeData.data = NULL;
+
     while (dataQueue->firstNode == NULL) {
         continue;
     }
@@ -373,6 +376,10 @@ yaidsthread_get_output_data(yaidsOutputDataQueue_ptr dataQueue)
 {
     yaidsOutputDataNode_ptr queuedDataNode;
     yaidsOutputDataNode nodeData;
+
+    nodeData.nextNode = NULL;
+    nodeData.data = NULL;
+    nodeData.alert = NULL;
 
     while (dataQueue->firstNode == NULL) {
         continue;
@@ -506,6 +513,7 @@ extern void *yaidsthread_yara_thread(void *args)
         } else {
             yaidsInputDataNode dataNode =
                 yaidsthread_get_input_data(yaidsInputQueue);
+                if (dataNode.data == NULL) continue;
             yaidsyara_scan_packet(yaraScanner, dataNode.data,
                                   yaidsOutputQueue,
                                   (yaidsYaraCallbackArgs_ptr) &
@@ -568,6 +576,8 @@ extern void *yaidsthread_output_thread(void *args)
         } else {
             yaidsOutputDataNode dataNode =
                 yaidsthread_get_output_data(yaidsOutputQueue);
+
+            if (dataNode.data == NULL) continue;
 
             if (!config->silent_mode) {
                 if (config->debug)

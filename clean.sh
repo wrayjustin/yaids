@@ -38,4 +38,6 @@
 ./init.sh
 ./configure
 make clean
+rm -rf ./src/.deps/*.Po
+rmdir ./src/.deps
 cp config.orig config.h

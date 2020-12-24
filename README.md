@@ -35,7 +35,7 @@ An Intrusion Detection System (IDS), utilizing Yara and multi-threading
 1. Install Development Tools (git, gcc, glibc, etc.)
 2. Install `libpcap` (including development headers)
 3. Install `libyara` (including development headers)
-4. Compile (from the `src` directory): `gcc <GCC OPTIONS> yaids.c yaidsconf.c yaidsio.c yaidspcap.c yaidsyara.c yaidsthread.c -o yaids -I. -I.. -I../include/ -lpcap -lyara -lpthread -lm`
+4. Compile (from the `src` directory): `gcc <GCC OPTIONS> yaids.c yaidsconf.c yaidsio.c yaidspcap.c yaidsyara.c yaidsthread.c -o yaids -I. -I.. -I../include/ -lpcap -lyara -lpthread -lm <ADDITIONAL LIBRARIES>`
 
 ## Usage
 YAIDS can run on either an interface (live capture) or stored PCAP files. You can use any Yara supported rules.
@@ -85,9 +85,8 @@ The alert output contains the following fields:
  * Layer-3 Source > Layer-3 Destination Addresses and Layer-4 Ports (Address:Port)
 
 An example alert:
-```
-2020-12-20 01:01:01 - Metasploit_Download [$s1:0x42:3] {GET /metasploitframework-latest.msi} [171:171/171] (ETH/IP/TCP) 10:00:00:00:00:B3 > 10:00:00:00:00:F7 - 198.51.100.12:41309 > 203.0.113.37:80
-```
+
+`2020-12-20 01:01:01 - Metasploit_Download [$s1:0x42:3] {GET /metasploitframework-latest.msi} [171:171/171] (ETH/IP/TCP) 10:00:00:00:00:B3 > 10:00:00:00:00:F7 - 198.51.100.12:41309 > 203.0.113.37:80`
 
 ## Technical Details
 The processing flow of YAIDS is straight-forward; data comes in, is processed, and then goes out: *INPUT->PROCESSING->OUTPUT*.
@@ -132,36 +131,72 @@ Data queues are created via a series of `structs` with a pointer to the subseque
 ### Flowchart
 
 ```
-                                                                        #-----------------#
-                                                                   +----+                 +----+
-                                                                   |    |    Yara         |    |
-                                                                   |    |    Thread 1     |    |
-                                                                   |    |                 |    |
-                                                                   |    #-----------------#    |
-                                                                   |                           |
-                                                                   |                           |
-                                                                   |    #-----------------#    |                                                *-----------------*
-                                                                   | +--+                 +--+ |                                              --+                 |
-                                                                   | |  |    Yara         |  | |                                              | |     Alert       |
-                                                                   | |  |    Thread 2     |  | |                                              | |     File        |
-*-----------------*     #-----------------#     +-----------------+| |  |                 |  | |+-----------------+     #-----------------#   | |                 |
-|                 |     |                 |     |                 +- |  #-----------------#  | -+                 |     |                 +---+ *-----------------*
-|     Packets     |     |     Input       |     |      Input      +---                       ---+     Output      |     |     Output      |
-|                 +-----+     Thread      +-----+      Queue      +---                       ---+     Queue       +-----+     Thread      |
-|                 |     |                 |     |                 +- |  #-----------------#  | -+                 |     |                 +---+ *-----------------*
-*-----------------*     #-----------------#     +-----------------+| |  |                 |  | |+-----------------+     #-----------------#   | |                 |
-                                                                   | |  |    Yara         |  | |                                              | |      PCAP       |
-                                                                   | |  |    Thread 3     |  | |                                              | |      File       |
-                                                                   | +--+                 +--+ |                                              --+                 |
-                                                                   |    #-----------------#    |                                                *-----------------*
-                                                                   |                           |
-                                                                   |                           |
-                                                                   |    #-----------------#    |
-                                                                   |    |                 |    |
-                                                                   |    |    Yara         |    |
-                                                                   |    |    Thread ...   |    |
-                                                                   +----+                 +----+
-                                                                        #-----------------#
+                                    *-----------------*
+                                    |                 |
+                                    |     Packets     |
+                                    |                 |
+                                    |                 |
+                                    *--------v--------*
+                                             |
+                                             |
+                                             |
+                                             |
+                                    #--------v--------#
+                                    |                 |
+                                    |     Input       |
+                                    |     Thread      |
+                                    |                 |
+                                    #--------v--------#
+                                             |
+                                             |
+                                             |
+                                             |
+                                    +--------V--------+
+                                    |                 |
+                                    |     Input       |
+                                    |     Queue       |
+                                    |                 |
+                                    +--v--v-----v--v--+
+         +-----------------------------+  |     |  +------------------------------
+         |                                |     |                                |
+         |                       +--------+     +--------+                       }
+         |                       |                       |                       |
+#--------V--------#     #--------V--------#     #--------V--------#     #--------V--------#
+|                 |     |                 |     |                 |     |                 |
+|    Yara         |     |    Yara         |     |    Yara         |     |    Yara         |
+|    Thread 1     |     |    Thread 2     |     |    Thread 3     |     |    Thread ...   |
+|                 |     |                 |     |                 |     |                 |
+#--------v--------#     #--------v--------#     #--------v--------#     #--------v--------#
+         |                       |                       |                       |
+         |                       +--------+     +--------+                       |
+         |                                |     |                                |
+         +-----------------------------+  |     |  +-----------------------------|
+                                    +--V--V-----V--V--+
+                                    |                 |
+                                    |     Output      |
+                                    |     Queue       |
+                                    |                 |
+                                    +--------v--------+
+                                             |
+                                             |
+                                             |
+                                             |
+                                    #--------V--------#
+                                    |                 |
+                                    |     Output      |
+                                    |     Thread      |
+                                    |                 |
+                                    #---v---------v---#
+                                        |         |
+                                        |         |
+                                 +------+         +------+
+                                 |                       |
+                        *--------V--------*     *--------V--------*
+                        |                 |     |                 |
+                        |      PCAP       |     |      Alert      |
+                        |      File       |     |      File       |
+                        |                 |     |                 |
+                        *-----------------*     *-----------------*
 ```
 
 ## License

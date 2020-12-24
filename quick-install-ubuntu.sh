@@ -36,13 +36,17 @@
 ##
 
 # Create an Installer Directory
-mkdir ./yaids_installer
-cd ./yaids_installer
+function setup_installer {
+    mkdir ./yaids_installer || return 1
+    cd ./yaids_installer || return 1
+}
 
 ##################################################
 #               Install Dependenices             #
 ##################################################
-    sudo apt install build-essential \
+function install_dependenices {
+    sudo apt install --assume-yes \
+                     build-essential \
                      automake \
                      libtool \
                      make \
@@ -50,8 +54,9 @@ cd ./yaids_installer
                      pkg-config \
                      flex \
                      bison \
-                     git
-    sudo apt install libjansson-dev \
+                     git || return 1
+    sudo apt install --assume-yes \
+                     libjansson-dev \
                      libssl-dev \
                      libmagic-dev \
                      protobuf-compiler \
@@ -59,16 +64,21 @@ cd ./yaids_installer
                      libprotoc-dev \
                      libprotobuf-c-dev \
                      google-perftools \
-                     libgoogle-perftools-dev
-    sudo apt install libbluetooth-dev \
-                     libdbus-1-dev
+                     libgoogle-perftools-dev || return 1
+    sudo apt install --assume-yes \
+                     libbluetooth-dev \
+                     libdbus-1-dev || return 1
+    sudo apt install --assume-yes \
+                     libbsd-dev || return 1
+}
 
 ##################################################
 #               Install libpcap 1.9.1            #
 ##################################################
-    wget https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz
-    tar -zxvf libpcap-1.9.1.tar.gz
-    cd ./libpcap-1.9.1
+function install_libpcap {
+    wget https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz || return 1
+    tar -zxvf libpcap-1.9.1.tar.gz || return 1
+    cd ./libpcap-1.9.1 || return 1
     ./configure --enable-largefile \
                 --enable-protochain \
                 --enable-packet-ring \
@@ -82,18 +92,20 @@ cd ./yaids_installer
                 --enable-bluetooth \
                 --enable-dbus \
                 --enable-rdma \
-                --with-gcc
-    make
-    sudo make install
-    cd ../
+                --with-gcc || return 1
+    make || return 1
+    sudo make install || return 1
+    cd ../ || return 1
+}
 
 ##################################################
 #               Install libyara 4.0.2            #
 ##################################################
-    wget https://github.com/VirusTotal/yara/archive/v4.0.2.tar.gz
-    tar -zxvf v4.0.2.tar.gz
-    cd ./yara-4.0.2
-    ./bootstrap.sh
+function install_libyara {
+    wget https://github.com/VirusTotal/yara/archive/v4.0.2.tar.gz || return 1
+    tar -zxvf v4.0.2.tar.gz || return 1
+    cd ./yara-4.0.2 || return 1
+    ./bootstrap.sh || return 1
     ./configure --enable-largefile \
                 --enable-cuckoo \
                 --enable-magic \
@@ -104,24 +116,28 @@ cd ./yaids_installer
                 --enable-pb-tests \
                 --enable-optimization \
                 --with-cpu-profiler \
-                --with-crypto
-    make
-    sudo make install
-    echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf > /dev/null
-    sudo ldconfig
-    cd ../
+                --with-crypto || return 1
+    make || return 1
+    sudo make install || return 1
+    echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf > /dev/null || return 1
+    sudo ldconfig || return 1
+    cd ../ || return 1
+}
 
 ##################################################
 #               Install YAIDS                    #
 ##################################################
-    git clone https://github.com/wrayjustin/yaids.git
-    cd ./yaids
-    ./build.sh
-    cd ../../
+function install_yaids {
+    git clone https://github.com/wrayjustin/yaids.git || return 1
+    cd ./yaids || return 1
+    ./build.sh || return 1
+    cd ../../ || return 1
+}
     
 ##################################################
-#               VErify YAIDS                     #
+#               Verify YAIDS                     #
 ##################################################
+function verify_install {
     yaids -v
     STATUS=$?
     if [ "$STATUS" == 0 ]; then
@@ -132,9 +148,27 @@ cd ./yaids_installer
         echo "Installation Complete"
         echo "  You can now delete the yaids_installer directory and this installer script."
         echo
+        exit 0
     else
         echo "---------"
         echo "Installation Failed."
-    fi
-    
+        exit 1
+fi
+}
+
+# Failure Process
+function install_failed {
+    echo "---------"
+    echo "Installation Failed."
+    exit 1
+}
+
+# Execution Installation
+setup_installer || install_failed
+install_dependenices || install_failed
+install_libpcap || install_failed
+install_libyara || install_failed
+install_yaids || install_failed
+verify_install
+
 #END
