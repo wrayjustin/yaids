@@ -1,0 +1,19 @@
+title: YAIDS
+lang: en
+description: Yara as an Intrusion Detection System / Yet Another Intrusion Detection System - An Intrusion Detection System (IDS), utilizing Yara and multi-threading
+
+repository: wrayjustin/yaids
+
+remote_theme: rundocs/jekyll-rtd-theme
+
+readme_index:
+  with_frontmatter: true
+
+exclude:
+  - Makefile
+  - CNAME
+  - Gemfile
+  - Gemfile.lock
+  - headers.Doxyfile
+  - source.Doxyfile
+  - yaids.1
