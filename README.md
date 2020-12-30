@@ -5,7 +5,7 @@ Yara as an Intrusion Detection System / Yet Another Intrusion Detection System
 
 An Intrusion Detection System (IDS), utilizing Yara and multi-threading
 
-[![Build](https://github.com/wrayjustin/yaids/workflows/Build/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3ABuild) [![Code Analysis](https://github.com/wrayjustin/yaids/workflows/Code%20Analysis/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3A%22Code+Analysis%22)
+[![Build](https://github.com/wrayjustin/yaids/workflows/Build/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3ABuild) [![Code Analysis](https://github.com/wrayjustin/yaids/workflows/Code%20Analysis/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3A%22Code+Analysis%22) [![Tests](https://github.com/wrayjustin/yaids/workflows/Tests/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3ATests)
 
 ## Installation
 
@@ -91,10 +91,12 @@ An example alert:
 `2020-12-20 01:01:01 - Metasploit_Download [$s1:0x42:3] {GET /metasploitframework-latest.msi} [171:171/171] (ETH/IP/TCP) 10:00:00:00:00:B3 > 10:00:00:00:00:F7 - 198.51.100.12:41309 > 203.0.113.37:80`
 
 ### Rules
-YAIDS supports any Yara-compatable rule, including enabled and properly modules.
+YAIDS supports any Yara-compatable rule, including enabled and properly configured modules.
 
 For convinenve, YAIDS also provides a "drop-in" replacement for `yara` (the Yara Rules Compiler).
 In addition to some feature enhancements, `yaidsc` sets "external" variables for various packet offsets.
+
+You can learn more about writing Yara rules from the Yara documentation: [Writing Yara Rules](https://yara.readthedocs.io/en/stable/writingrules.html).
 
 #### yaidsc
 `yaidsc` is a drop-in replacement for `yarac` using an identical syntax. If needed, you can also pass
@@ -245,12 +247,12 @@ YAIDS supports all libpcap-comptable data (network or otherwise).
 owever the header parsing does have some limitations.
 
 ##### Supported Layer-2 / Frame Protocols
-| Protocol Name | YAIDS VALUE |
+| Protocol Name | YAIDS Value |
 | ------------- | ----------- |
 | Ethernet      | ETH         |
 
 ##### Supported Layer-3 / Network Protocols
-| Protocol Name | YAIDS VALUE |
+| Protocol Name | YAIDS Value |
 | ------------- | ----------- |
 | IPv4          | IP          |
 | IPv6          | IP6         |
@@ -285,7 +287,7 @@ owever the header parsing does have some limitations.
 | VPROD         | VPROD       |
 
 ##### Supported Layer-4 / Transport Protocols
-| Protocol Name | YAIDS VALUE |
+| Protocol Name | YAIDS Value |
 | ------------- | ----------- |
 | TCP           | TCP         |
 | UDP           | UDP         |
