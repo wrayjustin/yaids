@@ -48,7 +48,7 @@ When running on a live interface, uee the following basic options: `yaids -i <in
 To process an exiisting PCAP file, use the following basic options: `yaids -r <path/to/pcap/file> -y <path/to/compiled/yara/rules>`.
 
 ### Options
-You can obtain more information from the help message by running: `yaids --help`
+You can obtain more information from the help message by running: `yaids --help` or `man yaids`
 ```
 YAIDS -- 0.0.1
         Yara as an Intrusion Detection System / Yet Another Intrusion Detection System
@@ -93,7 +93,7 @@ An example alert:
 ### Rules
 YAIDS supports any Yara-compatable rule, including enabled and properly configured modules.
 
-For convinenve, YAIDS also provides a "drop-in" replacement for `yara` (the Yara Rules Compiler).
+For convenience, YAIDS also provides a "drop-in" replacement for `yara` (the Yara Rules Compiler).
 In addition to some feature enhancements, `yaidsc` sets "external" variables for various packet offsets.
 
 You can learn more about writing Yara rules from the Yara documentation: [Writing Yara Rules](https://yara.readthedocs.io/en/stable/writingrules.html).
@@ -123,6 +123,7 @@ the unprocessed header) begins at offset `256`.
 
 ##### Offsets
 The processed (string-based) header uses the following format:
+
 | Value                                                              | Offset Location | Field Size |
 | ------------------------------------------------------------------ | --------------- | ---------- |
 | Payload Offset                                                     | 0               | 1 (Byte)   |
@@ -153,7 +154,7 @@ rule example_01 {
     strings:
         $string1 = "GET"
     condition:
-        $string1 at (int8(0) + 255)z
+        $string1 at (int8(0) + 255)
 }
 ```
 
@@ -196,6 +197,7 @@ provide `external variables`.  When using `yaidsc` to compile your rules, theres
 the offset locations.
 
 The Externabl Variables:
+
 | Value                                                              | Variable          |
 | ------------------------------------------------------------------ | ----------------- |
 | Original Packet (Length; This is regardless of the Capture Length) | headerStart       |
@@ -236,7 +238,7 @@ rule example_03 {
         $networkSource at networkSource and
         $transportSource at transportSource and
         $networkDest at networkDest and
-        $transportDest at transportDest
+        $transportDest at transportDest and
         $string1 at (int8(0) + 255)
 }
 ```
@@ -247,11 +249,13 @@ YAIDS supports all libpcap-comptable data (network or otherwise).
 owever the header parsing does have some limitations.
 
 ##### Supported Layer-2 / Frame Protocols
+
 | Protocol Name | YAIDS Value |
 | ------------- | ----------- |
 | Ethernet      | ETH         |
 
 ##### Supported Layer-3 / Network Protocols
+
 | Protocol Name | YAIDS Value |
 | ------------- | ----------- |
 | IPv4          | IP          |
@@ -287,6 +291,7 @@ owever the header parsing does have some limitations.
 | VPROD         | VPROD       |
 
 ##### Supported Layer-4 / Transport Protocols
+
 | Protocol Name | YAIDS Value |
 | ------------- | ----------- |
 | TCP           | TCP         |

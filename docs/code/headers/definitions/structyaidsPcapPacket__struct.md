@@ -24,12 +24,29 @@ yaidsPcapPacket\_struct Struct Reference
 
 `#include <yaidstypes.h>`
 
+Collaboration diagram for yaidsPcapPacket\_struct:
+
+![Collaboration graph](/images/structyaidsPcapPacket__struct__coll__graph.png)
+
+
 <span id="pub-attribs"></span> Public Attributes
 ------------------------------------------------
 
 bool 
 
-<a href="/code/headers/definitions/structyaidsPcapPacket__struct#a41700c9deb8485a8643c6f1674e3d665" class="el">alert</a>
+<a href="/code/headers/definitions/structyaidsPcapPacket__struct#a82da52da11aa9df10a0418f60f1a6fc0" class="el">yaraFinished</a>
+
+ 
+
+bool 
+
+<a href="/code/headers/definitions/structyaidsPcapPacket__struct#ab514caa0b2819cb8aa839fc4de625c9f" class="el">pcapWritten</a>
+
+ 
+
+int 
+
+<a href="/code/headers/definitions/structyaidsPcapPacket__struct#a448ffb0db641a0250693f0744553fee1" class="el">alertCount</a>
 
  
 
@@ -51,18 +68,30 @@ const u\_char \* 
 
  
 
+u\_char \* 
+
+<a href="/code/headers/definitions/structyaidsPcapPacket__struct#a01b4cd559fb0dac3e2e63d3800775899" class="el">yaraPacket</a>
+
+ 
+
+<a href="/code/headers/yaidstypes#a334a3d558c87c55c4c0d8bd3e0809fa0" class="el">yaidsPcapPacketHeader_ptr</a> 
+
+<a href="/code/headers/definitions/structyaidsPcapPacket__struct#a5a7b429855a2f85d9f24ab4a73578d26" class="el">parsedPacketHeaders</a>
+
+ 
+
 Member Data Documentation
 -------------------------
 
-<span id="a41700c9deb8485a8643c6f1674e3d665"></span>
+<span id="a448ffb0db641a0250693f0744553fee1"></span>
 
-<span class="permalink">[◆ ](#a41700c9deb8485a8643c6f1674e3d665)</span>alert
-----------------------------------------------------------------------------
+<span class="permalink">[◆ ](#a448ffb0db641a0250693f0744553fee1)</span>alertCount
+---------------------------------------------------------------------------------
 
 <table>
 <tbody>
 <tr class="odd">
-<td>bool yaidsPcapPacket_struct::alert</td>
+<td>int yaidsPcapPacket_struct::alertCount</td>
 </tr>
 </tbody>
 </table>
@@ -102,6 +131,58 @@ Member Data Documentation
 <tbody>
 <tr class="odd">
 <td>int yaidsPcapPacket_struct::packetSize</td>
+</tr>
+</tbody>
+</table>
+
+<span id="a5a7b429855a2f85d9f24ab4a73578d26"></span>
+
+<span class="permalink">[◆ ](#a5a7b429855a2f85d9f24ab4a73578d26)</span>parsedPacketHeaders
+------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td><a href="/code/headers/yaidstypes#a334a3d558c87c55c4c0d8bd3e0809fa0" class="el">yaidsPcapPacketHeader_ptr</a> yaidsPcapPacket_struct::parsedPacketHeaders</td>
+</tr>
+</tbody>
+</table>
+
+<span id="ab514caa0b2819cb8aa839fc4de625c9f"></span>
+
+<span class="permalink">[◆ ](#ab514caa0b2819cb8aa839fc4de625c9f)</span>pcapWritten
+----------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>bool yaidsPcapPacket_struct::pcapWritten</td>
+</tr>
+</tbody>
+</table>
+
+<span id="a82da52da11aa9df10a0418f60f1a6fc0"></span>
+
+<span class="permalink">[◆ ](#a82da52da11aa9df10a0418f60f1a6fc0)</span>yaraFinished
+-----------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>bool yaidsPcapPacket_struct::yaraFinished</td>
+</tr>
+</tbody>
+</table>
+
+<span id="a01b4cd559fb0dac3e2e63d3800775899"></span>
+
+<span class="permalink">[◆ ](#a01b4cd559fb0dac3e2e63d3800775899)</span>yaraPacket
+---------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>u_char* yaidsPcapPacket_struct::yaraPacket</td>
 </tr>
 </tbody>
 </table>

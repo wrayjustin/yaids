@@ -6,7 +6,7 @@ sort: 1
 ![YAIDS](/yaids.png)
 # Command Line Options
 
-You can obtain more information from the help message by running: `yaids --help`
+You can obtain more information from the help message by running: `yaids --help` or `man yaids`
 ```
 YAIDS -- 0.0.1
         Yara as an Intrusion Detection System / Yet Another Intrusion Detection System

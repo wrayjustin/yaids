@@ -533,6 +533,12 @@ typedef struct ether\_header \* 
 
  
 
+typedef struct ether\_addr \* 
+
+<a href="/code/headers/yaidstypes#ae4f647cb95d4f79f32fd2f0fc754a584" class="el">etherAddress_ptr</a>
+
+ 
+
 typedef struct ip \* 
 
 <a href="/code/headers/yaidstypes#a417d06d1cf7d4f1c873447e417602d83" class="el">ipHeader_ptr</a>
@@ -553,6 +559,19 @@ typedef struct udphdr \* 
 
 Typedef Documentation
 ---------------------
+
+<span id="ae4f647cb95d4f79f32fd2f0fc754a584"></span>
+
+<span class="permalink">[◆ ](#ae4f647cb95d4f79f32fd2f0fc754a584)</span>etherAddress\_ptr
+----------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>typedef struct ether_addr* <a href="/code/headers/yaidstypes#ae4f647cb95d4f79f32fd2f0fc754a584" class="el">etherAddress_ptr</a></td>
+</tr>
+</tbody>
+</table>
 
 <span id="a34b4c345014c857bc9f48312a919f7c4"></span>
 

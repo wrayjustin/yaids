@@ -103,12 +103,10 @@ callbackArgs, YR\_RULE \*yaraRule, YR\_SCAN\_CONTEXT \*scanContext)
 
 void 
 
-<a href="/code/headers/yaidsyara#af4b6d0143640347d06ed0da5f321957c" class="el">yaidsyara_scanner_callback_get_alert_line</a>
+<a href="/code/headers/yaidsyara#a629966c3ca5d57152c35f3b22c1aa56a" class="el">yaidsyara_scanner_callback_get_alert_line</a>
 (<a href="/code/headers/yaidstypes#aa4acf913104abdae7ed98afff431e337" class="el">yaidsYaraCallbackArgs_ptr</a>
-callbackArgs,
-<a href="/code/headers/yaidstypes#a334a3d558c87c55c4c0d8bd3e0809fa0" class="el">yaidsPcapPacketHeader_ptr</a>
-parsedPacketHeaders, char \*alertString, int alertStringMax, char
-\*timeString, char \*ruleName, char \*metaMatch, char \*stringMatch)
+callbackArgs, char \*alertString, int alertStringMax, char \*timeString,
+char \*ruleName, char \*metaMatch, char \*stringMatch)
 
  
 
@@ -323,9 +321,9 @@ Function Documentation
 </tbody>
 </table>
 
-<span id="af4b6d0143640347d06ed0da5f321957c"></span>
+<span id="a629966c3ca5d57152c35f3b22c1aa56a"></span>
 
-<span class="permalink">[◆ ](#af4b6d0143640347d06ed0da5f321957c)</span>yaidsyara\_scanner\_callback\_get\_alert\_line()
+<span class="permalink">[◆ ](#a629966c3ca5d57152c35f3b22c1aa56a)</span>yaidsyara\_scanner\_callback\_get\_alert\_line()
 -----------------------------------------------------------------------------------------------------------------------
 
 <table>
@@ -339,46 +337,40 @@ Function Documentation
 <tr class="even">
 <td></td>
 <td></td>
-<td><a href="/code/headers/yaidstypes#a334a3d558c87c55c4c0d8bd3e0809fa0" class="el">yaidsPcapPacketHeader_ptr</a> </td>
-<td><em>parsedPacketHeaders</em>,</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
 <td>char * </td>
 <td><em>alertString</em>,</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td></td>
 <td></td>
 <td>int </td>
 <td><em>alertStringMax</em>,</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td></td>
 <td></td>
 <td>char * </td>
 <td><em>timeString</em>,</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td></td>
 <td></td>
 <td>char * </td>
 <td><em>ruleName</em>,</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td></td>
 <td></td>
 <td>char * </td>
 <td><em>metaMatch</em>,</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td></td>
 <td></td>
 <td>char * </td>
 <td><em>stringMatch</em> </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td></td>
 <td>)</td>
 <td></td>

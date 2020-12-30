@@ -94,6 +94,14 @@ void 
 
  
 
+u\_char \* 
+
+<a href="/code/source/yaidspcap#a89d6a31d637bdaffc15790daa086468d" class="el">yaidspcap_get_yara_packet_header</a>
+(yaidsPcapPacketHeader\_ptr parsedPacketHeaders, u\_char
+\*yaraPacketHeader)
+
+ 
+
 yaidsPcapPacketHeaderFrame\_ptr 
 
 <a href="/code/source/yaidspcap#abe880eda863f945d86f546fad8983af2" class="el">yaidspcap_parse_pcap_headers_frame</a>
@@ -168,8 +176,68 @@ void 
 
  
 
+char \* 
+
+<a href="/code/source/yaidspcap#ad5d408082e8916bd7b02928f7568b93d" class="el">yaids_ether_ntoa</a>
+(etherAddress\_ptr address)
+
+ 
+
+char \* 
+
+<a href="/code/source/yaidspcap#a623ca8a245b336d3068f0ad93e6a6292" class="el">yaids_ether_ntoa_r</a>
+(etherAddress\_ptr address, char \*buffer)
+
+ 
+
 Function Documentation
 ----------------------
+
+<span id="ad5d408082e8916bd7b02928f7568b93d"></span>
+
+<span class="permalink">[◆ ](#ad5d408082e8916bd7b02928f7568b93d)</span>yaids\_ether\_ntoa()
+-------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>char* yaids_ether_ntoa</td>
+<td>(</td>
+<td>etherAddress_ptr </td>
+<td><em>address</em></td>
+<td>)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<span id="a623ca8a245b336d3068f0ad93e6a6292"></span>
+
+<span class="permalink">[◆ ](#a623ca8a245b336d3068f0ad93e6a6292)</span>yaids\_ether\_ntoa\_r()
+----------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>char* yaids_ether_ntoa_r</td>
+<td>(</td>
+<td>etherAddress_ptr </td>
+<td><em>address</em>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td>char * </td>
+<td><em>buffer</em> </td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>)</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 
 <span id="a43c5bb0d628ab0f5a83f0faae1782b8c"></span>
 
@@ -212,6 +280,34 @@ Function Documentation
 <td>FILE * </td>
 <td><em>pcapFileHandle</em></td>
 <td>)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<span id="a89d6a31d637bdaffc15790daa086468d"></span>
+
+<span class="permalink">[◆ ](#a89d6a31d637bdaffc15790daa086468d)</span>yaidspcap\_get\_yara\_packet\_header()
+-------------------------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>u_char* yaidspcap_get_yara_packet_header</td>
+<td>(</td>
+<td>yaidsPcapPacketHeader_ptr </td>
+<td><em>parsedPacketHeaders</em>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td>u_char * </td>
+<td><em>yaraPacketHeader</em> </td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>)</td>
+<td></td>
 <td></td>
 </tr>
 </tbody>

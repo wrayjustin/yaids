@@ -6,6 +6,54 @@ sort: 6
 ![YAIDS](/yaids.png)
 # ChangeLog
 
+## Additional README.md Updates - Wed Dec 30 07:07:39 2020 +0000
+
+[ea3b233](https://github.com/wrayjustin/yaids/commit/ea3b2336fb28122b412cb7e12886d43d88384a55) by [wrayjustin](https://github.com/wrayjustin)
+
+## Updated README.md - Wed Dec 30 06:58:37 2020 +0000
+
+[c22fb51](https://github.com/wrayjustin/yaids/commit/c22fb511be84ecefb5598a5fb22add69d7d2f65c) by [wrayjustin](https://github.com/wrayjustin)
+
+## Added Document Generation Makefile - Wed Dec 30 05:47:22 2020 +0000
+
+[eceae5d](https://github.com/wrayjustin/yaids/commit/eceae5d23650ba5bd54bf91e3b4794320b525aea) by [wrayjustin](https://github.com/wrayjustin)
+
+## Added Tests Workflow - Wed Dec 30 00:40:35 2020 -0500
+
+[64b0ff7](https://github.com/wrayjustin/yaids/commit/64b0ff7881a4be46ae9bfeb126cc7324e81945b4) by [wrayjustin](https://github.com/wrayjustin)
+
+## Added Tests - Wed Dec 30 05:33:04 2020 +0000
+
+[d0bf0a5](https://github.com/wrayjustin/yaids/commit/d0bf0a519716648a3408107c6020bc831505161c) by [wrayjustin](https://github.com/wrayjustin)
+
+## Added `yaidsc` (Compiles YARA Rules for YAIDS) - Wed Dec 30 05:29:36 2020 +0000
+
+[d639979](https://github.com/wrayjustin/yaids/commit/d63997996ec53da4f434a04b7a951bb9dd6200ec) by [wrayjustin](https://github.com/wrayjustin)
+
+## Added `yaids.io` CNAME (Development Merge) - Wed Dec 30 05:26:39 2020 +0000
+
+[3b0668c](https://github.com/wrayjustin/yaids/commit/3b0668cf950b22d22a2c9b3093c8f0cab8c0fd24) by [wrayjustin](https://github.com/wrayjustin)
+
+## Bug Fixes, Code Cleanup, Optimization, and Formatting - Wed Dec 30 05:23:54 2020 +0000
+
+[4a6a127](https://github.com/wrayjustin/yaids/commit/4a6a127424b7b953a2eccc4d9f9dcb1719d0a791) by [wrayjustin](https://github.com/wrayjustin)
+
+## Create CNAME - Sun Dec 27 02:23:10 2020 -0500
+
+[3d0615b](https://github.com/wrayjustin/yaids/commit/3d0615bd3585d30360c49671bca4531dac15ccdc) by [wrayjustin](https://github.com/wrayjustin)
+
+## Initial Documentation / GH Pages - Sun Dec 27 07:17:41 2020 +0000
+
+[b3dc540](https://github.com/wrayjustin/yaids/commit/b3dc5406c948937e75e54917999139654b77b676) by [wrayjustin](https://github.com/wrayjustin)
+
+## Updated README.md - Sun Dec 27 07:11:10 2020 +0000
+
+[93127bf](https://github.com/wrayjustin/yaids/commit/93127bf8360d21beed567b5f587d827b1a745e1b) by [wrayjustin](https://github.com/wrayjustin)
+
+## Added Documentation Generation - Sun Dec 27 07:09:36 2020 +0000
+
+[f90c7b7](https://github.com/wrayjustin/yaids/commit/f90c7b737be9c73ae6d4d4373c777e3c26c4baea) by [wrayjustin](https://github.com/wrayjustin)
+
 ## Added Security Policy - Thu Dec 24 01:27:52 2020 -0500
 
 [13786f5](https://github.com/wrayjustin/yaids/commit/13786f5e3d2d3f8ab3fb915bfc068cf049e2bc14) by [wrayjustin](https://github.com/wrayjustin)

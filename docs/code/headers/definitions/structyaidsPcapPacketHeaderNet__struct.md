@@ -48,6 +48,12 @@ char 
 
  
 
+int 
+
+<a href="/code/headers/definitions/structyaidsPcapPacketHeaderNet__struct#a40cd060282381da49e8b4a8b773391ff" class="el">length</a>
+
+ 
+
 Member Data Documentation
 -------------------------
 
@@ -60,6 +66,19 @@ Member Data Documentation
 <tbody>
 <tr class="odd">
 <td>char yaidsPcapPacketHeaderNet_struct::dest[INET6_ADDRSTRLEN+1]</td>
+</tr>
+</tbody>
+</table>
+
+<span id="a40cd060282381da49e8b4a8b773391ff"></span>
+
+<span class="permalink">[◆ ](#a40cd060282381da49e8b4a8b773391ff)</span>length
+-----------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>int yaidsPcapPacketHeaderNet_struct::length</td>
 </tr>
 </tbody>
 </table>

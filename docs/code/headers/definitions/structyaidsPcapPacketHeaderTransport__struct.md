@@ -48,6 +48,12 @@ char 
 
  
 
+int 
+
+<a href="/code/headers/definitions/structyaidsPcapPacketHeaderTransport__struct#a6cc800c0cef4a7bb8b03b33e45cf7c67" class="el">length</a>
+
+ 
+
 Member Data Documentation
 -------------------------
 
@@ -60,6 +66,19 @@ Member Data Documentation
 <tbody>
 <tr class="odd">
 <td>char yaidsPcapPacketHeaderTransport_struct::dest[10]</td>
+</tr>
+</tbody>
+</table>
+
+<span id="a6cc800c0cef4a7bb8b03b33e45cf7c67"></span>
+
+<span class="permalink">[◆ ](#a6cc800c0cef4a7bb8b03b33e45cf7c67)</span>length
+-----------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>int yaidsPcapPacketHeaderTransport_struct::length</td>
 </tr>
 </tbody>
 </table>

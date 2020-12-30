@@ -40,6 +40,12 @@ Include dependency graph for yaidspcap.h:
 
  
 
+\#define 
+
+<a href="/code/headers/yaidspcap#a0fe4f2bb2f6199a68a7c09c66192349c" class="el">PKT_PREPROC_HDR_SIZE</a>   255
+
+ 
+
 <span id="func-members"></span> Functions
 -----------------------------------------
 
@@ -83,6 +89,14 @@ void 
 <a href="/code/headers/yaidspcap#a523a3bd2d0dd085380b9a2fa5fea466b" class="el">yaidspcap_read_callback</a>
 (u\_char \*args, const struct pcap\_pkthdr \*packetHeader, const u\_char
 \*packetBody)
+
+ 
+
+u\_char \* 
+
+<a href="/code/headers/yaidspcap#a89d6a31d637bdaffc15790daa086468d" class="el">yaidspcap_get_yara_packet_header</a>
+(<a href="/code/headers/yaidstypes#a334a3d558c87c55c4c0d8bd3e0809fa0" class="el">yaidsPcapPacketHeader_ptr</a>
+parsedPacketHeaders, u\_char \*yaraPacketHeader)
 
  
 
@@ -187,6 +201,22 @@ void 
 
  
 
+char \* 
+
+<a href="/code/headers/yaidspcap#ad5d408082e8916bd7b02928f7568b93d" class="el">yaids_ether_ntoa</a>
+(<a href="/code/headers/yaidstypes#ae4f647cb95d4f79f32fd2f0fc754a584" class="el">etherAddress_ptr</a>
+address)
+
+ 
+
+char \* 
+
+<a href="/code/headers/yaidspcap#a623ca8a245b336d3068f0ad93e6a6292" class="el">yaids_ether_ntoa_r</a>
+(<a href="/code/headers/yaidstypes#ae4f647cb95d4f79f32fd2f0fc754a584" class="el">etherAddress_ptr</a>
+address, char \*buffer)
+
+ 
+
 Macro Definition Documentation
 ------------------------------
 
@@ -203,8 +233,67 @@ Macro Definition Documentation
 </tbody>
 </table>
 
+<span id="a0fe4f2bb2f6199a68a7c09c66192349c"></span>
+
+<span class="permalink">[◆ ](#a0fe4f2bb2f6199a68a7c09c66192349c)</span>PKT\_PREPROC\_HDR\_SIZE
+----------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>#define PKT_PREPROC_HDR_SIZE   255</td>
+</tr>
+</tbody>
+</table>
+
 Function Documentation
 ----------------------
+
+<span id="ad5d408082e8916bd7b02928f7568b93d"></span>
+
+<span class="permalink">[◆ ](#ad5d408082e8916bd7b02928f7568b93d)</span>yaids\_ether\_ntoa()
+-------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>char* yaids_ether_ntoa</td>
+<td>(</td>
+<td><a href="/code/headers/yaidstypes#ae4f647cb95d4f79f32fd2f0fc754a584" class="el">etherAddress_ptr</a> </td>
+<td><em>address</em></td>
+<td>)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<span id="a623ca8a245b336d3068f0ad93e6a6292"></span>
+
+<span class="permalink">[◆ ](#a623ca8a245b336d3068f0ad93e6a6292)</span>yaids\_ether\_ntoa\_r()
+----------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>char* yaids_ether_ntoa_r</td>
+<td>(</td>
+<td><a href="/code/headers/yaidstypes#ae4f647cb95d4f79f32fd2f0fc754a584" class="el">etherAddress_ptr</a> </td>
+<td><em>address</em>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td>char * </td>
+<td><em>buffer</em> </td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>)</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 
 <span id="a43c5bb0d628ab0f5a83f0faae1782b8c"></span>
 
@@ -265,6 +354,34 @@ Function Documentation
 <td>FILE * </td>
 <td><em>pcapFileHandle</em></td>
 <td>)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<span id="a89d6a31d637bdaffc15790daa086468d"></span>
+
+<span class="permalink">[◆ ](#a89d6a31d637bdaffc15790daa086468d)</span>yaidspcap\_get\_yara\_packet\_header()
+-------------------------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>u_char* yaidspcap_get_yara_packet_header</td>
+<td>(</td>
+<td><a href="/code/headers/yaidstypes#a334a3d558c87c55c4c0d8bd3e0809fa0" class="el">yaidsPcapPacketHeader_ptr</a> </td>
+<td><em>parsedPacketHeaders</em>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td>u_char * </td>
+<td><em>yaraPacketHeader</em> </td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>)</td>
+<td></td>
 <td></td>
 </tr>
 </tbody>
