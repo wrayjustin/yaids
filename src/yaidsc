@@ -1,0 +1,178 @@
+#!/bin/bash
+
+##
+ #  yaidsc - Compile YARA Rules for YAIDS
+ #
+ #  This file is a part of or derived from YAIDS: https://github.com/wrayjustin/yaids
+ #
+ #  COPYRIGHT (C) 2020 Justin M. Wray - wray.justin@gmail.com / https://www.justinwray.com
+ #  ALL RIGHTS RESERVED
+ #
+ #  Redistribution and use in source and binary forms, with or without modification,
+ #  are permitted provided that the following conditions are met:
+ #
+ #  1. Redistributions of source code must retain the above copyright notice, this
+ #  list of conditions and the following disclaimer.
+ #
+ #  2. Redistributions in binary form must reproduce the above copyright notice,
+ #  this list of conditions and the following disclaimer in the documentation and/or
+ #  other materials provided with the distribution.
+ #
+ #  3. Neither the name of the copyright holder nor the names of its contributors
+ #  may be used to endorse or promote products derived from this software without
+ #  specific prior written permission.
+ #
+ #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND
+ #  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ #  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ #  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ #  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ #  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ #  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ #  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #
+##
+
+# FAILURE Message
+function compile_failed {
+    echo "-------"
+    echo 'Compiling Rules Failed.'
+    exit 1
+}
+
+# SUCCESS Message
+function compiled_success {
+    echo "Rules Completed: ${BASH_ARGV[0]}"
+    exit 0
+}
+
+# Heading Message
+function print_heading {
+    echo "+--------------------------------------------------------+"
+    echo "|              Compile YARA Rules for YAIDS              |"
+    echo "+--------------------------------------------------------+"
+}
+
+# Help/Usage Message
+function help_message {
+    print_heading | return 1
+    echo 'Usage:'
+    echo -e "\t$(basename "$0") <INPUT [NAMESPACE]FILES|DIRECTORIES...> <OUTPUT FILE> "
+    echo
+    echo " * If the input is a directory, all '.yar' files will be compiled."
+    echo " * You can compile multiple files or directories, one ruleset."
+    echo " * Namespaces can be provided, but only for individual files (not directories)."
+    exit 0
+}
+
+# Check Arguments
+function verify_options {
+    if [ "$#" -lt 2 ]; then
+        help_message || return 1
+    fi
+}
+
+# Verify File or Directory Exists
+function verify_input_exists {
+    INPUT="$1"
+    
+    if [ ! -f "$INPUT" ] && [ ! -d "$INPUT" ]; then
+        return 1
+    fi
+}
+
+# Execute YARAC
+function execute_yarac {
+    INPUT_OPTIONS="$1"
+    INPUT_FILES="$2"
+    OUTPUT_FILE="$3"
+    
+#   Header Offsets:
+#       Payload Offset: 0
+#       Packet Length (Original): 1
+#       Frame Protocol: 6
+#       Network Protocol: 20
+#       Transport Protocol: 34
+#       Frane Source Address: 48
+#       Frame Destination Address: 65
+#       Network Source Adderess: 82
+#       Transport Source (Port): 128
+#       Network Destination Address: 133
+#       Transport Destination (Port): 179
+    
+    # shellcheck disable=SC2086
+    yarac -d headerStart="256" \
+          -d packetLength="1" \
+          -d frameProtocol="6" \
+          -d netProtocol="20" \
+          -d transportProtocol="34" \
+          -d frameSource="48" \
+          -d frameDest="65" \
+          -d networkSource="82" \
+          -d networkDest="133" \
+          -d transportSource="128" \
+          -d transportDest="179" \
+          $INPUT_OPTIONS $INPUT_FILES "$OUTPUT_FILE" || return 1
+}
+
+# Expand Directories and Globbing
+function expand_input {
+    for INPUT in "$@"; do
+        if [ -d "$INPUT" ]; then
+            find "$INPUT" -type f -name "*.yar" || return 1
+        else
+            # shellcheck disable=SC2086
+            echo $INPUT
+        fi
+    done
+}
+
+# Prepare Rules and Compaile
+function compile_rules {
+    OUTPUT_FILE="yaids.yarc"
+    ARGS=("$@")
+
+    INPUT_FILES=()
+    
+    LAST_ARG=$#
+    ((--LAST_ARG))
+    
+    for ((IDX = 0 ; IDX <= $#-1 ; IDX++)); do
+        INPUT="${ARGS[$IDX]}"
+        
+        if [ $IDX == $LAST_ARG ]; then
+            OUTPUT_FILE="$INPUT"
+            break
+        elif [[ "$INPUT" =~ ^\-.* ]]; then
+            ((++IDX))
+            INPUT_ARG="${ARGS[$IDX]}"
+            INPUT_OPTIONS="${INPUT_OPTIONS} $INPUT $INPUT_ARG"
+        else
+            # shellcheck disable=SC2207
+            INPUT_FILES+=( $(expand_input "$INPUT") ) || return 1
+        fi
+    done
+    
+    # shellcheck disable=SC2207
+    INPUT_FILES=($(echo "${INPUT_FILES[*]}" | tr ' ' '\n' | sort -u | xargs)) || return 1
+    
+    execute_yarac "$INPUT_OPTIONS" "${INPUT_FILES[*]}" "$OUTPUT_FILE" || return 1
+}
+
+# Verify Compleition
+function verify_rules {
+    if [ -f "$1" ]; then
+        compiled_success
+    else
+        compile_failed
+    fi
+}
+
+##################################################
+#               Build YAIDS Rules                #
+##################################################
+verify_options "$@" || compile_failed
+compile_rules "$@" || compile_failed
+verify_rules "${BASH_ARGV[0]}"
