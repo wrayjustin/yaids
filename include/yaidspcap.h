@@ -39,6 +39,7 @@
 #define yaidspcap
 
 #define ETH_HEADER_SIZE                     14
+#define PKT_PREPROC_HDR_SIZE                255
 
 extern void yaidspcap_init(yaidsPcapHandle_ptr pcapHandle);
 extern yaidsPcapPacket_ptr yaidspcap_new_packet(int size);
@@ -49,6 +50,7 @@ extern void yaidspcap_read_packets(yaidsPcapHandle_ptr pcapHandle,
 extern void yaidspcap_read_callback(u_char * args,
                                     const struct pcap_pkthdr *packetHeader,
                                     const u_char * packetBody);
+extern u_char* yaidspcap_get_yara_packet_header(yaidsPcapPacketHeader_ptr parsedPacketHeaders, u_char* yaraPacketHeader);
 extern yaidsPcapPacketHeaderFrame_ptr yaidspcap_parse_pcap_headers_frame(etherHeader_ptr etherHeader);
 extern yaidsPcapPacketHeaderNet_ptr yaidspcap_parse_pcap_headers_net(etherHeader_ptr etherHeader, ipHeader_ptr ipHeader);
 extern yaidsPcapPacketHeaderTransport_ptr yaidspcap_parse_pcap_headers_transport(yaidsPcapPacket_ptr packet, ipHeader_ptr ipHeader);
@@ -65,5 +67,7 @@ extern void yaidspcap_write_packet(FILE * pcapFileHandle,
                                    yaidsPcapPacket_ptr packet);
 extern void yaidspcap_flush_output(FILE * pcapFileHandle);
 extern void yaidspcap_finish(void);
+extern char * yaids_ether_ntoa (etherAddress_ptr address);
+extern char * yaids_ether_ntoa_r (etherAddress_ptr address, char *buffer);
 
 #endif

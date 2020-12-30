@@ -50,7 +50,7 @@
 #include <signal.h>
 
 const char *PROGRAM_NAME = "YAIDS";
-const char *COPYRIGHT = 
+const char *COPYRIGHT =
     "COPYRIGHT (C) Justin M. Wray | Licensed: BSD 3-Clause";
 const char *PROGRAM_SUBLINE =
     "Yara as an Intrusion Detection System / Yet Another Intrusion Detection System";
@@ -90,7 +90,8 @@ extern int main(int argc, char **argv)
     yaidsconf_config_init(&config, argv[0], argc);
     verify_status(config.status);
 
-    if (config.debug) yaidsio_print_config_debug(&config);
+    if (config.debug)
+        yaidsio_print_config_debug(&config);
 
     yaidsPcapHandle pcapHandle;
     verify_status(yaidspcap_create_handle

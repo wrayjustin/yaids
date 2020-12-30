@@ -74,9 +74,10 @@ extern yaidsPcapPacket_ptr yaidspcap_new_packet(int size)
 {
     yaidsPcapPacket_ptr packet;
     packet =
-        (yaidsPcapPacket_ptr) calloc(sizeof(yaidsPcapPacket_ptr) +
-                                     sizeof(struct pcap_pkthdr) + size,
-                                     sizeof(int));
+        (yaidsPcapPacket_ptr) calloc(sizeof(yaidsPcapPacket) +
+                                     sizeof(struct pcap_pkthdr) +
+                                     sizeof(yaidsPcapPacketHeader) + size +
+                                     255 + size, sizeof(int));
     return packet;
 }
 
@@ -125,36 +126,120 @@ extern void yaidspcap_read_callback(u_char * args,
     yaidsPacketCounts_ptr packetCounts = callbackArgs->packetCounts;
 
 #ifdef HAVE_MALLOC_TRIM
-        malloc_trim(32);
+    malloc_trim(32);
 
-        if (config->debug > 1)
-            yaidsio_print_debug_line("Flushing Memory [PCAP Thread: %u]",
-                                     (unsigned int)pthread_self());
+    if (config->debug > 1)
+        yaidsio_print_debug_line("Flushing Memory [PCAP Thread: %u]",
+                                 (unsigned int) pthread_self());
 #endif
 
     struct pcap_pkthdr *copyPacketHeader =
         calloc(sizeof(struct pcap_pkthdr), sizeof(int));
+    yaidsPcapPacketHeader_ptr parsedPacketHeaders =
+        (yaidsPcapPacketHeader_ptr)
+        calloc(sizeof(yaidsPcapPacketHeader), sizeof(int));
+    u_char *yaraPacket =
+        calloc(PKT_PREPROC_HDR_SIZE + packetHeader->caplen, sizeof(int));
+
     copyPacketHeader->caplen = packetHeader->caplen;
     copyPacketHeader->len = packetHeader->len;
     copyPacketHeader->ts = packetHeader->ts;
 
+    u_char *copyPacketBody = calloc(packetHeader->caplen, sizeof(char));
+    memcpy(copyPacketBody, packetBody, packetHeader->caplen);
+
     yaidsPcapPacket_ptr yaidsPcapPacket =
         yaidspcap_new_packet(packetHeader->caplen);
-    yaidsPcapPacket->alert = false;
+    yaidsPcapPacket->alertCount = 0;
+    yaidsPcapPacket->yaraFinished = false;
+    yaidsPcapPacket->pcapWritten = false;
     yaidsPcapPacket->packetSize = packetHeader->caplen;
     yaidsPcapPacket->packetHeader = copyPacketHeader;
-    yaidsPcapPacket->packetBody = packetBody;
+    yaidsPcapPacket->packetBody = copyPacketBody;
 
-    if (config->debug)
+
+    yaidspcap_parse_pcap_headers(yaidsPcapPacket, parsedPacketHeaders);
+    yaidsPcapPacket->parsedPacketHeaders = parsedPacketHeaders;
+
+    yaidspcap_get_yara_packet_header(yaidsPcapPacket->parsedPacketHeaders,
+                                     yaraPacket);
+    memcpy(yaraPacket + PKT_PREPROC_HDR_SIZE, packetBody,
+           yaidsPcapPacket->packetSize);
+    yaidsPcapPacket->yaraPacket = yaraPacket;
+
+    if (config->read_pcap_file)
+        yaidsthread_update_pcap_packet_count(packetCounts);
+
+    if (config->debug) {
         yaidsio_print_debug_line("Pakcet Captured: %p (Size: %d, TS: %d)",
                                  yaidsPcapPacket,
-                                 yaidsPcapPacket->packetSize, (int)yaidsPcapPacket->packetHeader->ts.tv_sec);
+                                 yaidsPcapPacket->packetSize,
+                                 (int) yaidsPcapPacket->packetHeader->
+                                 ts.tv_sec);
+        yaidsio_print_debug_line
+            ("Adding Packet Count: PCAP [PC: %d | YC: %d | AC: %d | OC: %d]",
+             packetCounts->pcapPacketCount, packetCounts->yaraPacketCount,
+             packetCounts->alertPacketCount,
+             packetCounts->outputPacketCount);
+    }
 
-    if (config->read_pcap_file) yaidsthread_update_pcap_packet_count(packetCounts);
     yaidsthread_add_input_data(yaidsInputQueue, yaidsPcapPacket);
 }
 
-extern yaidsPcapPacketHeaderFrame_ptr yaidspcap_parse_pcap_headers_frame(etherHeader_ptr etherHeader)
+extern u_char *yaidspcap_get_yara_packet_header(yaidsPcapPacketHeader_ptr
+                                                parsedPacketHeaders,
+                                                u_char * yaraPacketHeader)
+{
+    if (parsedPacketHeaders->transportExists) {
+        snprintf((char *) yaraPacketHeader, PKT_PREPROC_HDR_SIZE,
+                 "%c%-5d%-14s%-14s%-14s%-17s%-17s%-46s%-5s%-46s%-5s\n",
+                 (char) parsedPacketHeaders->payloadOffset,
+                 parsedPacketHeaders->originalPacketLength,
+                 parsedPacketHeaders->frameType,
+                 parsedPacketHeaders->netType,
+                 parsedPacketHeaders->transportType,
+                 parsedPacketHeaders->frameSource,
+                 parsedPacketHeaders->frameDest,
+                 parsedPacketHeaders->netSource,
+                 parsedPacketHeaders->transportSource,
+                 parsedPacketHeaders->netDest,
+                 parsedPacketHeaders->transportDest);
+    } else if (parsedPacketHeaders->netExists) {
+        snprintf((char *) yaraPacketHeader, PKT_PREPROC_HDR_SIZE,
+                 "%c%-5d%-14s%-14s%-14s%-17s%-17s%-51s%-51s\n",
+                 (char) parsedPacketHeaders->payloadOffset,
+                 parsedPacketHeaders->originalPacketLength,
+                 parsedPacketHeaders->frameType,
+                 parsedPacketHeaders->netType,
+                 parsedPacketHeaders->transportType,
+                 parsedPacketHeaders->frameSource,
+                 parsedPacketHeaders->frameDest,
+                 parsedPacketHeaders->netSource,
+                 parsedPacketHeaders->netDest);
+    } else if (parsedPacketHeaders->frameExists) {
+        snprintf((char *) yaraPacketHeader, PKT_PREPROC_HDR_SIZE,
+                 "%c%-5d%-14s%-14s%-14s%-17s%-133s\n",
+                 (char) parsedPacketHeaders->payloadOffset,
+                 parsedPacketHeaders->originalPacketLength,
+                 parsedPacketHeaders->frameType,
+                 parsedPacketHeaders->netType,
+                 parsedPacketHeaders->transportType,
+                 parsedPacketHeaders->frameSource,
+                 parsedPacketHeaders->frameDest);
+    } else {
+        snprintf((char *) yaraPacketHeader, PKT_PREPROC_HDR_SIZE,
+                 "%c%-5d%-14s%-164s",
+                 (char) parsedPacketHeaders->payloadOffset,
+                 parsedPacketHeaders->originalPacketLength,
+                 parsedPacketHeaders->frameType,
+                 parsedPacketHeaders->netType);
+    }
+
+    return yaraPacketHeader;
+}
+
+extern yaidsPcapPacketHeaderFrame_ptr
+yaidspcap_parse_pcap_headers_frame(etherHeader_ptr etherHeader)
 {
     yaidsPcapPacketHeaderFrame_ptr frameHeader;
     frameHeader = calloc(sizeof(yaidsPcapPacketHeaderFrame), sizeof(char));
@@ -162,15 +247,29 @@ extern yaidsPcapPacketHeaderFrame_ptr yaidspcap_parse_pcap_headers_frame(etherHe
     frameHeader->type[0] = '\0';
     frameHeader->source[0] = '\0';
     frameHeader->dest[0] = '\0';
+    frameHeader->length = 14;
+
+    char *frameSource;
+    char *frameDest;
+
+    frameSource =
+        yaids_ether_ntoa((struct ether_addr *) etherHeader->ether_shost);
+    frameDest =
+        yaids_ether_ntoa((struct ether_addr *) etherHeader->ether_dhost);
 
     sec_str_cpy(frameHeader->type, "ETH", 12);
-    sec_str_cpy(frameHeader->source, ether_ntoa((struct ether_addr *) etherHeader->ether_shost), INET6_ADDRSTRLEN);
-    sec_str_cpy(frameHeader->dest, ether_ntoa((struct ether_addr *) etherHeader->ether_dhost), INET6_ADDRSTRLEN);
+    sec_str_cpy(frameHeader->source, frameSource, INET6_ADDRSTRLEN);
+    sec_str_cpy(frameHeader->dest, frameDest, INET6_ADDRSTRLEN);
+
+    free(frameSource);
+    free(frameDest);
 
     return frameHeader;
 }
 
-extern yaidsPcapPacketHeaderNet_ptr yaidspcap_parse_pcap_headers_net(etherHeader_ptr etherHeader, ipHeader_ptr ipHeader)
+extern yaidsPcapPacketHeaderNet_ptr
+yaidspcap_parse_pcap_headers_net(etherHeader_ptr etherHeader,
+                                 ipHeader_ptr ipHeader)
 {
     yaidsPcapPacketHeaderNet_ptr netHeader;
     netHeader = calloc(sizeof(yaidsPcapPacketHeaderNet), sizeof(char));
@@ -178,35 +277,43 @@ extern yaidsPcapPacketHeaderNet_ptr yaidspcap_parse_pcap_headers_net(etherHeader
     netHeader->type[0] = '\0';
     netHeader->source[0] = '\0';
     netHeader->dest[0] = '\0';
+    netHeader->length = 0;
 
-    sec_str_cpy(netHeader->type, yaidspcap_parse_pcap_headers_get_nettype(etherHeader), 12);
+    sec_str_cpy(netHeader->type,
+                yaidspcap_parse_pcap_headers_get_nettype(etherHeader), 12);
 
     if (ipHeader != NULL) {
         char sourceIP[INET6_ADDRSTRLEN];
         char destIP[INET6_ADDRSTRLEN];
 
-        inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIP,
-                  INET_ADDRSTRLEN);
-        inet_ntop(AF_INET, &(ipHeader->ip_dst), destIP,
-                  INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &(ipHeader->ip_src), sourceIP, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &(ipHeader->ip_dst), destIP, INET_ADDRSTRLEN);
 
-    sec_str_cpy(netHeader->source, sourceIP, INET6_ADDRSTRLEN);
-    sec_str_cpy(netHeader->dest, destIP, INET6_ADDRSTRLEN);
+        netHeader->length = (ipHeader->ip_hl * 4);
+
+        sec_str_cpy(netHeader->source, sourceIP, INET6_ADDRSTRLEN);
+        sec_str_cpy(netHeader->dest, destIP, INET6_ADDRSTRLEN);
     }
 
     return netHeader;
 }
 
-extern yaidsPcapPacketHeaderTransport_ptr yaidspcap_parse_pcap_headers_transport(yaidsPcapPacket_ptr packet, ipHeader_ptr ipHeader)
+extern yaidsPcapPacketHeaderTransport_ptr
+yaidspcap_parse_pcap_headers_transport(yaidsPcapPacket_ptr packet,
+                                       ipHeader_ptr ipHeader)
 {
     yaidsPcapPacketHeaderTransport_ptr transportHeader;
-    transportHeader = calloc(sizeof(yaidsPcapPacketHeaderTransport), sizeof(char));
+    transportHeader =
+        calloc(sizeof(yaidsPcapPacketHeaderTransport), sizeof(char));
 
     transportHeader->type[0] = '\0';
     transportHeader->source[0] = '\0';
     transportHeader->dest[0] = '\0';
+    transportHeader->length = 0;
 
-    sec_str_cpy(transportHeader->type, yaidspcap_parse_pcap_headers_get_transporttype(ipHeader), 12);
+    sec_str_cpy(transportHeader->type,
+                yaidspcap_parse_pcap_headers_get_transporttype(ipHeader),
+                12);
 
     u_int sourcePort;
     u_int destPort;
@@ -214,11 +321,13 @@ extern yaidsPcapPacketHeaderTransport_ptr yaidspcap_parse_pcap_headers_transport
     if (ipHeader->ip_p == IPPROTO_TCP) {
         tcpHeader_ptr tcpHeader;
         tcpHeader = (struct tcphdr *) (packet->packetBody +
-                               sizeof(struct ether_header) +
-                               sizeof(struct ip));
+                                       sizeof(struct ether_header) +
+                                       sizeof(struct ip));
 
         sourcePort = ntohs(tcpHeader->source);
         destPort = ntohs(tcpHeader->dest);
+
+        transportHeader->length = (tcpHeader->doff * 4);
 
         snprintf(transportHeader->source, 8, "%d", sourcePort);
         snprintf(transportHeader->dest, 8, "%d", destPort);
@@ -226,11 +335,13 @@ extern yaidsPcapPacketHeaderTransport_ptr yaidspcap_parse_pcap_headers_transport
     } else if (ipHeader->ip_p == IPPROTO_UDP) {
         udpHeader_ptr udpHeader;
         udpHeader = (struct udphdr *) (packet->packetBody +
-                               sizeof(struct ether_header) +
-                               sizeof(struct ip));
+                                       sizeof(struct ether_header) +
+                                       sizeof(struct ip));
 
         sourcePort = ntohs(udpHeader->source);
         destPort = ntohs(udpHeader->dest);
+
+        transportHeader->length = 8;
 
         snprintf(transportHeader->source, 8, "%d", sourcePort);
         snprintf(transportHeader->dest, 8, "%d", destPort);
@@ -239,7 +350,7 @@ extern yaidsPcapPacketHeaderTransport_ptr yaidspcap_parse_pcap_headers_transport
     return transportHeader;
 }
 
-extern char* yaidspcap_parse_pcap_headers_get_nettype(etherHeader_ptr etherHeader) //LGTM[cpp/poorly-documented-function] - Lengthy SWITCH
+extern char *yaidspcap_parse_pcap_headers_get_nettype(etherHeader_ptr etherHeader)      //LGTM[cpp/poorly-documented-function] - Lengthy SWITCH
 {
     switch (ntohs(etherHeader->ether_type)) {
         case ETHERTYPE_IP:
@@ -341,7 +452,8 @@ extern char* yaidspcap_parse_pcap_headers_get_nettype(etherHeader_ptr etherHeade
     }
 }
 
-extern char* yaidspcap_parse_pcap_headers_get_transporttype(ipHeader_ptr ipHeader)
+extern char *yaidspcap_parse_pcap_headers_get_transporttype(ipHeader_ptr
+                                                            ipHeader)
 {
     switch (ipHeader->ip_p) {
         case IPPROTO_TCP:
@@ -359,42 +471,87 @@ extern char* yaidspcap_parse_pcap_headers_get_transporttype(ipHeader_ptr ipHeade
     }
 }
 
-extern void yaidspcap_parse_pcap_headers_results(yaidsPcapPacketHeader_ptr parsedPacketHeaders, yaidsPcapPacketHeaderFrame_ptr frameHeader, yaidsPcapPacketHeaderNet_ptr netHeader, yaidsPcapPacketHeaderTransport_ptr transportHeader)
+extern void yaidspcap_parse_pcap_headers_results(yaidsPcapPacketHeader_ptr
+                                                 parsedPacketHeaders,
+                                                 yaidsPcapPacketHeaderFrame_ptr
+                                                 frameHeader,
+                                                 yaidsPcapPacketHeaderNet_ptr
+                                                 netHeader,
+                                                 yaidsPcapPacketHeaderTransport_ptr
+                                                 transportHeader)
 {
     if (transportHeader != NULL) {
         parsedPacketHeaders->frameExists = true;
         parsedPacketHeaders->netExists = true;
         parsedPacketHeaders->transportExists = true;
 
-        snprintf(parsedPacketHeaders->typeList, 42, "%s/%s/%s", frameHeader->type, netHeader->type,
+        snprintf(parsedPacketHeaders->typeList, 42, "%s/%s/%s",
+                 frameHeader->type, netHeader->type,
                  transportHeader->type);
 
-        sec_str_cpy(parsedPacketHeaders->frameSource, frameHeader->source, INET6_ADDRSTRLEN + 1);
-        sec_str_cpy(parsedPacketHeaders->frameDest, frameHeader->dest, INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->frameType, frameHeader->type, 14);
+        sec_str_cpy(parsedPacketHeaders->frameSource, frameHeader->source,
+                    INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->frameDest, frameHeader->dest,
+                    INET6_ADDRSTRLEN + 1);
 
-        sec_str_cpy(parsedPacketHeaders->netSource, netHeader->source, INET6_ADDRSTRLEN + 1);
-        sec_str_cpy(parsedPacketHeaders->netDest, netHeader->dest, INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->netType, netHeader->type, 14);
+        sec_str_cpy(parsedPacketHeaders->netSource, netHeader->source,
+                    INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->netDest, netHeader->dest,
+                    INET6_ADDRSTRLEN + 1);
 
-        sec_str_cpy(parsedPacketHeaders->transportSource, transportHeader->source, 10);
-        sec_str_cpy(parsedPacketHeaders->transportDest, transportHeader->dest, 10);
+        sec_str_cpy(parsedPacketHeaders->transportType,
+                    transportHeader->type, 14);
+        sec_str_cpy(parsedPacketHeaders->transportSource,
+                    transportHeader->source, 10);
+        sec_str_cpy(parsedPacketHeaders->transportDest,
+                    transportHeader->dest, 10);
+
+        parsedPacketHeaders->payloadOffset =
+            frameHeader->length + netHeader->length +
+            transportHeader->length;
     } else if (netHeader != NULL) {
         parsedPacketHeaders->frameExists = true;
         parsedPacketHeaders->netExists = true;
 
-        snprintf(parsedPacketHeaders->typeList, 42, "%s/%s", frameHeader->type, netHeader->type);
+        snprintf(parsedPacketHeaders->typeList, 42, "%s/%s",
+                 frameHeader->type, netHeader->type);
 
-        sec_str_cpy(parsedPacketHeaders->frameSource, frameHeader->source, INET6_ADDRSTRLEN + 1);
-        sec_str_cpy(parsedPacketHeaders->frameDest, frameHeader->dest, INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->frameType, frameHeader->type, 14);
+        sec_str_cpy(parsedPacketHeaders->frameSource, frameHeader->source,
+                    INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->frameDest, frameHeader->dest,
+                    INET6_ADDRSTRLEN + 1);
 
-        sec_str_cpy(parsedPacketHeaders->netSource, netHeader->source, INET6_ADDRSTRLEN + 1);
-        sec_str_cpy(parsedPacketHeaders->netDest, netHeader->dest, INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->netType, netHeader->type, 14);
+        sec_str_cpy(parsedPacketHeaders->netSource, netHeader->source,
+                    INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->netDest, netHeader->dest,
+                    INET6_ADDRSTRLEN + 1);
+
+        sec_str_cpy(parsedPacketHeaders->transportType, "UNKN", 14);
+
+        parsedPacketHeaders->payloadOffset =
+            frameHeader->length + netHeader->length;
     } else if (frameHeader != NULL) {
         parsedPacketHeaders->frameExists = true;
 
-        snprintf(parsedPacketHeaders->typeList, 42, "%s", frameHeader->type);
+        snprintf(parsedPacketHeaders->typeList, 42, "%s",
+                 frameHeader->type);
 
-        sec_str_cpy(parsedPacketHeaders->frameSource, frameHeader->source, INET6_ADDRSTRLEN + 1);
-        sec_str_cpy(parsedPacketHeaders->frameDest, frameHeader->dest, INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->frameType, frameHeader->type, 14);
+        sec_str_cpy(parsedPacketHeaders->frameSource, frameHeader->source,
+                    INET6_ADDRSTRLEN + 1);
+        sec_str_cpy(parsedPacketHeaders->frameDest, frameHeader->dest,
+                    INET6_ADDRSTRLEN + 1);
+
+        sec_str_cpy(parsedPacketHeaders->netType, "UNKN", 14);
+        sec_str_cpy(parsedPacketHeaders->transportType, "UNKN", 14);
+
+        parsedPacketHeaders->payloadOffset = frameHeader->length;
+    } else {
+        parsedPacketHeaders->payloadOffset = 0;
     }
 }
 
@@ -420,19 +577,22 @@ extern void yaidspcap_parse_pcap_headers(yaidsPcapPacket_ptr packet,
         etherHeader = NULL;
         ipHeader = NULL;
 
-        etherHeader = (etherHeader_ptr)packet->packetBody;
+        etherHeader = (etherHeader_ptr) packet->packetBody;
         frameHeader = yaidspcap_parse_pcap_headers_frame(etherHeader);
 
         if (ntohs(etherHeader->ether_type) == ETHERTYPE_IP
             || ntohs(etherHeader->ether_type) == ETHERTYPE_IPV6) {
             ipHeader =
-            (struct ip *) (packet->packetBody +
-                           sizeof(struct ether_header));
+                (struct ip *) (packet->packetBody +
+                               sizeof(struct ether_header));
 
-            netHeader = yaidspcap_parse_pcap_headers_net(etherHeader, ipHeader);
-            transportHeader = yaidspcap_parse_pcap_headers_transport(packet, ipHeader);
+            netHeader =
+                yaidspcap_parse_pcap_headers_net(etherHeader, ipHeader);
+            transportHeader =
+                yaidspcap_parse_pcap_headers_transport(packet, ipHeader);
         } else {
-            netHeader = yaidspcap_parse_pcap_headers_net(etherHeader, ipHeader);
+            netHeader =
+                yaidspcap_parse_pcap_headers_net(etherHeader, ipHeader);
         }
     } else if (packet->packetHeader->len == ETH_HEADER_SIZE) {
         sec_str_cpy(parsedPacketHeaders->typeList, "ETH", 10);
@@ -440,7 +600,10 @@ extern void yaidspcap_parse_pcap_headers(yaidsPcapPacket_ptr packet,
         sec_str_cpy(parsedPacketHeaders->typeList, "UNKN", 10);
     }
 
-    yaidspcap_parse_pcap_headers_results(parsedPacketHeaders, frameHeader, netHeader, transportHeader);
+    yaidspcap_parse_pcap_headers_results(parsedPacketHeaders, frameHeader,
+                                         netHeader, transportHeader);
+
+    parsedPacketHeaders->originalPacketLength = packet->packetHeader->len;
 
     free(frameHeader);
     free(netHeader);
@@ -465,4 +628,20 @@ extern void yaidspcap_write_packet(FILE * pcapFileHandle,
 extern void yaidspcap_flush_output(FILE * pcapFileHandle)
 {
     pcap_dump_flush((pcap_dumper_t *) pcapFileHandle);
+}
+
+extern char *yaids_ether_ntoa(etherAddress_ptr address)
+{
+    char *fullAddress;
+    fullAddress = calloc(18, sizeof(char));
+    return yaids_ether_ntoa_r(address, fullAddress);
+}
+
+extern char *yaids_ether_ntoa_r(etherAddress_ptr address, char *buffer)
+{
+    snprintf(buffer, 18, "%02X:%02X:%02X:%02X:%02X:%02X",
+             address->ether_addr_octet[0], address->ether_addr_octet[1],
+             address->ether_addr_octet[2], address->ether_addr_octet[3],
+             address->ether_addr_octet[4], address->ether_addr_octet[5]);
+    return buffer;
 }

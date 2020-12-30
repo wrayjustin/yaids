@@ -254,8 +254,7 @@ extern void yaidsio_print_config_debug(yaidsConfig_ptr config)
     yaidsio_print_debug_line("\t pcapDevice: %s", config->pcapDevice);
     yaidsio_print_debug_line("\t yaraRulesFile: %s",
                              config->yaraRulesFile);
-    yaidsio_print_debug_line("\t outputPrefix: %s",
-                             config->outputPrefix);
+    yaidsio_print_debug_line("\t outputPrefix: %s", config->outputPrefix);
     yaidsio_print_debug_line("\t outputPath: %s", config->outputPath);
     yaidsio_print_debug_line("\t pcapInputFile: %s",
                              config->pcapInputFile);

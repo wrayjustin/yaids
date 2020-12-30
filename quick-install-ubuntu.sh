@@ -7,17 +7,17 @@
  #
  #  COPYRIGHT (C) 2020 Justin M. Wray - wray.justin@gmail.com / https://www.justinwray.com
  #  ALL RIGHTS RESERVED
- #  
+ #
  #  Redistribution and use in source and binary forms, with or without modification,
  #  are permitted provided that the following conditions are met:
- #  
+ #
  #  1. Redistributions of source code must retain the above copyright notice, this
  #  list of conditions and the following disclaimer.
- #  
+ #
  #  2. Redistributions in binary form must reproduce the above copyright notice,
  #  this list of conditions and the following disclaimer in the documentation and/or
  #  other materials provided with the distribution.
- #  
+ #
  #  3. Neither the name of the copyright holder nor the names of its contributors
  #  may be used to endorse or promote products derived from this software without
  #  specific prior written permission.
@@ -36,7 +36,8 @@
 ##
 
 # Create an Installer Directory
-function setup_installer {
+function setup_installer
+{
     mkdir ./yaids_installer || return 1
     cd ./yaids_installer || return 1
 }
@@ -44,7 +45,8 @@ function setup_installer {
 ##################################################
 #               Install Dependenices             #
 ##################################################
-function install_dependenices {
+function install_dependenices
+{
     sudo apt install --assume-yes \
                      build-essential \
                      automake \
@@ -75,7 +77,8 @@ function install_dependenices {
 ##################################################
 #               Install libpcap 1.9.1            #
 ##################################################
-function install_libpcap {
+function install_libpcap
+{
     wget https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz || return 1
     tar -zxvf libpcap-1.9.1.tar.gz || return 1
     cd ./libpcap-1.9.1 || return 1
@@ -101,7 +104,8 @@ function install_libpcap {
 ##################################################
 #               Install libyara 4.0.2            #
 ##################################################
-function install_libyara {
+function install_libyara
+{
     wget https://github.com/VirusTotal/yara/archive/v4.0.2.tar.gz || return 1
     tar -zxvf v4.0.2.tar.gz || return 1
     cd ./yara-4.0.2 || return 1
@@ -127,17 +131,19 @@ function install_libyara {
 ##################################################
 #               Install YAIDS                    #
 ##################################################
-function install_yaids {
+function install_yaids
+{
     git clone https://github.com/wrayjustin/yaids.git || return 1
     cd ./yaids || return 1
     ./build.sh || return 1
     cd ../../ || return 1
 }
-    
+
 ##################################################
 #               Verify YAIDS                     #
 ##################################################
-function verify_install {
+function verify_install
+{
     yaids -v
     STATUS=$?
     if [ "$STATUS" == 0 ]; then
@@ -153,11 +159,12 @@ function verify_install {
         echo "---------"
         echo "Installation Failed."
         exit 1
-fi
+    fi
 }
 
 # Failure Process
-function install_failed {
+function install_failed
+{
     echo "---------"
     echo "Installation Failed."
     exit 1

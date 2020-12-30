@@ -52,7 +52,7 @@ extern void yaidsyara_scan_packet(yaidsYaraScanner_ptr yaraScanner,
 extern int yaidsyara_scanner_callback(YR_SCAN_CONTEXT * scanContext,
                                       int status, void *rule, void *args);
 extern char *yaidsyara_scanner_callback_get_alert(yaidsYaraCallbackArgs_ptr callbackArgs, YR_RULE *yaraRule, YR_SCAN_CONTEXT * scanContext);
-extern void yaidsyara_scanner_callback_get_alert_line(yaidsYaraCallbackArgs_ptr callbackArgs, yaidsPcapPacketHeader_ptr parsedPacketHeaders, char* alertString, int alertStringMax, char* timeString, char* ruleName, char* metaMatch, char* stringMatch);
+extern void yaidsyara_scanner_callback_get_alert_line(yaidsYaraCallbackArgs_ptr callbackArgs, char* alertString, int alertStringMax, char* timeString, char* ruleName, char* metaMatch, char* stringMatch);
 extern char *yaidsyara_scanner_callback_get_match_meta(YR_SCAN_CONTEXT *
                                                        scanContext,
                                                        YR_RULE * yaraRule);

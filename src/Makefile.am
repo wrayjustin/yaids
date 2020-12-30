@@ -20,3 +20,5 @@ yaids_SOURCES =  \
   $(top_srcdir)/include/yaidsyara.h
 
 yaids_INCLUDES = $(top_srcdir)/include/
+
+dist_bin_SCRIPTS = yaidsc

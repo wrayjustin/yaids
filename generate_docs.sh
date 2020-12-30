@@ -1,11 +1,50 @@
 #!/bin/bash
 
-function check_dependencies {
+##
+ #  generate_docs.sh - Automated Documentation Generator for YAIDS
+ #
+ #  This file is a part of or derived from YAIDS: https://github.com/wrayjustin/yaids
+ #
+ #  COPYRIGHT (C) 2020 Justin M. Wray - wray.justin@gmail.com / https://www.justinwray.com
+ #  ALL RIGHTS RESERVED
+ #
+ #  Redistribution and use in source and binary forms, with or without modification,
+ #  are permitted provided that the following conditions are met:
+ #
+ #  1. Redistributions of source code must retain the above copyright notice, this
+ #  list of conditions and the following disclaimer.
+ #
+ #  2. Redistributions in binary form must reproduce the above copyright notice,
+ #  this list of conditions and the following disclaimer in the documentation and/or
+ #  other materials provided with the distribution.
+ #
+ #  3. Neither the name of the copyright holder nor the names of its contributors
+ #  may be used to endorse or promote products derived from this software without
+ #  specific prior written permission.
+ #
+ #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ #  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ #  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ #  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ #  ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ #  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ #  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ #  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #
+##
+
+# Check for Required Dependencies
+function check_dependencies
+{
     command -v doxygen || return 1
     command -v pandoc || return 1
 }
 
-function missing_dependencies {
+# Provide Missing Dependency Error
+function missing_dependencies
+{
     echo "---------"
     echo "Documentation Generated Failed -- MISSING DEPENDENCIES."
     echo
@@ -13,13 +52,17 @@ function missing_dependencies {
     exit 1
 }
 
-function doc_generation_failed {
+# Provide Error if Doc Generation Fails
+function doc_generation_failed
+{
     echo "---------"
     echo "Documentation Generated Failed."
     exit 1
 }
 
-function doc_directory_setup {
+# Create Missing Documentation Directories
+function doc_directory_setup
+{
     mkdir -p docs/installation/ || return 1
     mkdir -p docs/usage/ || return 1
     mkdir -p docs/technical/ || return 1
@@ -30,7 +73,9 @@ function doc_directory_setup {
     mkdir -p docs/images/ || return 1
 }
 
-function doc_cleanup {
+# Remove Prevvious Files
+function doc_cleanup
+{
     cd docs/ || return 1
     make clean || return 1
     make clean-doxygen || return 1
@@ -39,91 +84,109 @@ function doc_cleanup {
     cd ../ || return 1
 }
 
-function prepare_for_repo {
+# Remove Tempoary Files
+function prepare_for_repo
+{
     cd docs/ || return 1
     make clean-local || return 1
     rm -rf man.source || return 1
     cd ../ || return 1
 }
 
-function process_doxygen {
+# Generate Automated Code Documentation with Doxygen
+function process_doxygen
+{
     doxygen docs/headers.Doxyfile || return 1 # Doxygen: Code Headers
     doxygen docs/source.Doxyfile || return 1 # Doxygen: Code Source
 }
 
-function create_markdown {
+# Create a New Markdown File
+function create_markdown
+{
     FILE="$1"
     TITLE="$2"
     PERMALINK="$3"
     SORT="$4"
     NOTICE_TYPE="$5"
     NOTICE_TEXT="$6"
-    
+
     echo '---' > "$FILE" || return 1
     echo "title: $TITLE" >> "$FILE" || return 1
     echo "permalink: $PERMALINK" >> "$FILE" || return 1
-    
+
     if [ -n "$SORT" ]; then
         echo "sort: $SORT" >> "$FILE" || return 1
     fi
-    
+
     echo '---' >> "$FILE" || return 1
     echo '![YAIDS](/yaids.png)' >> "$FILE" || return 1
     echo "# $TITLE" >> "$FILE" || return 1
     echo  >> "$FILE" || return 1
-    
+
     if [ -n "$NOTICE_TYPE" ] && [ -n "$NOTICE_TEXT" ]; then
         echo '```' "$NOTICE_TYPE" >> "$FILE" || return 1
         echo "$NOTICE_TEXT" >> "$FILE" || return 1
         echo '```' >> "$FILE" || return 1
     fi
-    
+
     echo "$FILE" >> docs/man.source
 }
 
-function create_markdown_index {
+# Create Markdown and make it an Index
+function create_markdown_index
+{
     FILE="$1"
     create_markdown "$@" || return 1
     echo '{% include list.liquid all=true %}' >> "$FILE" || return 1
 }
 
-function create_markdown_changelog {
+# Create Markdown and make it a ChangeLog
+function create_markdown_changelog
+{
     FILE="$1"
     create_markdown "$@" || return 1
     git log --pretty=format:'## %s - %cd%n%b%n[%h](https://github.com/wrayjustin/yaids/commit/%H) by [%aN](https://github.com/%aN)%n' >> "$FILE"
 }
 
-function create_markdown_from_readme_top {
+# Create Markdown and fill with first README.md section
+function create_markdown_from_readme_top
+{
     FILE="$1"
     create_markdown "$@" || return 1
     FIRST_SECTION=$(grep '## ' README.md | head -n 1) || return 1
     sed "/$FIRST_SECTION/q" README.md | head -n -1 | tail -n +2 >> "$FILE" || return 1
 }
 
-function create_markdown_from_readme_bottom {
+# Create Markdown and fill with last README.md section
+function create_markdown_from_readme_bottom
+{
     FILE="$1"
     create_markdown "$@" || return 1
     LAST_SECTION=$(grep '## ' README.md | tail -n 1) || return 1
     awk "/^$LAST_SECTION/,0" README.md | tail -n +2 >> "$FILE" || return 1
 }
 
-function create_markdown_from_readme_section {
+# Create Markdown and fill with specific section
+function create_markdown_from_readme_section
+{
     FILE="$1"
     TITLE="$2"
     MATCH="$7"
-    
+
     if [ -z "$MATCH" ]; then
         MATCH="$TITLE"
     fi
-    
+
     MATCH=$(echo "$MATCH" | sed -e 's/(/\\(/g' -e 's/)/\\)/g' -e 's/\//\\\//g') || return 1
     create_markdown "$@" || return 1
     awk "/^(###|##) $MATCH/{flag=1;next}/^(###|##)/{flag=0}flag" README.md | head -n -1 | sed -e 's/#\{1,\}/#/' >> "$FILE" || return 1
 }
 
-function markdown_cleanup {
+# Cleanup Autogenerated Markdown
+function markdown_cleanup
+{
     FILE="$1"
-    
+
     REMOVELIST=(
         '\[Public Attributes\]'
         '\-members\.html'
@@ -131,7 +194,7 @@ function markdown_cleanup {
         'dir.*\.html'
         'Go to the source code of this file'
         '\!\[YAIDS\](\/yaids\.png)')
-    
+
     # shellcheck disable=SC2016
     REPLACELIST=(
         '/\.png/s/href=\"/href=\"\/images\//g'
@@ -148,20 +211,22 @@ function markdown_cleanup {
         's/_8c_source\.html//g'
         's/__struct\.html/__struct/g'
         '$s/Generated by/Source Code Documentation Generated By \`doxygen\`<\/span>/')
-        
+
     sed -i '$d' "$FILE"
     sed -i '$d' "$FILE"
-    
+
     for REMOVELINE in "${REMOVELIST[@]}"; do
         sed "/$REMOVELINE/d" -i "$FILE" || return 1
     done || return 1
-    
+
     for SED_CMD in "${REPLACELIST[@]}"; do
         sed -e "$SED_CMD" -i "$FILE" || return 1
     done || return 1
 }
 
-function generate_code_definition_docs {
+# Create Markdown and fill with Code Definitions
+function generate_code_definition_docs
+{
     # shellcheck disable=SC2010
     for definition in $(ls docs/_doxygen-headers/html/structyaids*.html | grep -v "\-members.html" | sed -e 's/docs\/_doxygen-headers\/html\///g' | sed -e 's/\.html//g'); do
         create_markdown "docs/code/headers/definitions/$definition.md" "$definition" "code/headers/definitions/$definition" || return 1 # Create Definition MD
@@ -170,7 +235,9 @@ function generate_code_definition_docs {
     done
 }
 
-function generate_code_headers_docs {
+# Create Markdown and fill with auto-generated Code Header Documentation
+function generate_code_headers_docs
+{
     # shellcheck disable=SC2012
     for header in $(ls include/*.h | sed -e 's/include\///' | sed -e 's/\.h//'); do
         create_markdown "docs/code/headers/$header.md" "$header" "code/headers/$header" || return 1 # Create Definition MD
@@ -179,7 +246,9 @@ function generate_code_headers_docs {
     done
 }
 
-function generate_code_source_docs {
+# Create Markdown and fill with auto-generated Source Code Documentation
+function generate_code_source_docs
+{
     # shellcheck disable=SC2012
     for code in $(ls src/*.c | sed -e 's/src\///' | sed -e 's/\.c//'); do
         create_markdown "docs/code/source/$code.md" "$code" "code/source/$code" || return 1 # Create Definition MD
@@ -188,26 +257,34 @@ function generate_code_source_docs {
     done
 }
 
-function copy_code_images {
+# Copy Code Documentation Diagrams
+function copy_code_images
+{
     cp docs/_doxygen-headers/html/*yaids*.png docs/images/ || return 1
     cp docs/_doxygen-source/html/*yaids*.png docs/images/ || return 1
     rm docs/images/yaids.png || return 1
 }
 
-function generate_code_docs {
+# Execute Document Generation
+function generate_code_docs
+{
     generate_code_definition_docs || return 1
     generate_code_headers_docs || return 1
     generate_code_source_docs || return 1
     copy_code_images || return 1
 }
 
-function create_docs_readme {
+# Create a README for Docuumentation
+function create_docs_readme
+{
     create_markdown_from_readme_top 'docs/README.md' 'YAIDS' '/' '1' || return 1 # Home
     echo '## Documentation' >> docs/README.md || return 1
     echo '{% include list.liquid all=true %}' >> docs/README.md || return 1
 }
 
-function generate_doc_files {
+# Generate Documentation Files
+function generate_doc_files
+{
     create_docs_readme || return 1 # Main Page (Home)
     create_markdown_index 'docs/installation/index.md' 'Installation' '/installation/' '2' || return 1 # Installation: Index
     create_markdown_index 'docs/usage/index.md' 'Usage' '/usage/' '3' || return 1 # Usage: Index
@@ -244,15 +321,20 @@ function generate_doc_files {
     generate_code_docs || return 1 # Code (Doxygen Converted)
 }
 
-function create_man_page {
+# Create MAN Page from generated Documentation
+function create_man_page
+{
     # shellcheck disable=SC2046
-    pandoc -s $(cat docs/man.source) -t man -o docs/yaids.1 || return 1
+    pandoc -s README.md -t man -o docs/yaids.1 || return 1
     sed -e 's/\[IMAGE: .* (.*\.png)\]//g' -i docs/yaids.1 || return 1
     sed -e '/{% include list.liquid all=true %}/d' -i docs/yaids.1 || return 1
     sed -e '/\[IMAGE:  Build  /d' -i docs/yaids.1 || return 1
     rm -rf docs/man.sources || return 1
 }
 
+##################################################
+#               Build Documentation              #
+##################################################
 check_dependencies || missing_dependencies
 doc_directory_setup || doc_generation_failed
 doc_cleanup || doc_generation_failed
@@ -263,6 +345,10 @@ prepare_for_repo || doc_generation_failed
 
 # END
 
-## Uncomment for Local Testing (Requires `jekyll`)
+################################
+#### LOCAL TESTING
+#### Uncomment for Local Testing (Requires `jekyll`)
 #cd ./docs || doc_generation_failed
 #bundle exec jekyll serve -H 0.0.0.0 || doc_generation_failed
+#### END OF LOCAL TESTING
+################################

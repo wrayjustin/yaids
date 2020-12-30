@@ -94,6 +94,7 @@ typedef yaidsYaraScanner *yaidsYaraScanner_ptr;
 typedef yaidsYaraThreadArgs *yaidsYaraThreadArgs_ptr;
 
 typedef struct ether_header *etherHeader_ptr;
+typedef struct ether_addr *etherAddress_ptr;
 typedef struct ip *ipHeader_ptr;
 typedef struct tcphdr *tcpHeader_ptr;
 typedef struct udphdr *udpHeader_ptr;
@@ -223,10 +224,14 @@ typedef struct yaidsTimelimitThreadArgs_struct {
 } yaidsTimelimitThreadArgs;
 
 typedef struct yaidsPcapPacket_struct {
-    bool alert;
+    bool yaraFinished;
+    bool pcapWritten;
+    int alertCount;
     int packetSize;
     const struct pcap_pkthdr *packetHeader;
     const u_char *packetBody;
+    u_char *yaraPacket;
+    yaidsPcapPacketHeader_ptr parsedPacketHeaders;
 } yaidsPcapPacket;
 
 typedef struct yaidsPcapPacketHeader_struct {
@@ -234,30 +239,38 @@ typedef struct yaidsPcapPacketHeader_struct {
     bool netExists;
     bool transportExists;
     char typeList[42];
+    char frameType[14];
     char frameSource[INET6_ADDRSTRLEN + 1];
     char frameDest[INET6_ADDRSTRLEN + 1];
+    char netType[14];
     char netSource[INET6_ADDRSTRLEN + 1];
     char netDest[INET6_ADDRSTRLEN + 1];
+    char transportType[14];
     char transportSource[10];
     char transportDest[10];
+    int payloadOffset;
+    int originalPacketLength;
 } yaidsPcapPacketHeader;
 
 typedef struct yaidsPcapPacketHeaderFrame_struct {
     char type[14];
     char source[INET6_ADDRSTRLEN + 1];
     char dest[INET6_ADDRSTRLEN + 1];
+    int length;
 } yaidsPcapPacketHeaderFrame;
 
 typedef struct yaidsPcapPacketHeaderNet_struct {
     char type[14];
     char source[INET6_ADDRSTRLEN + 1];
     char dest[INET6_ADDRSTRLEN + 1];
+    int length;
 } yaidsPcapPacketHeaderNet;
 
 typedef struct yaidsPcapPacketHeaderTransport_struct {
     char type[14];
     char source[10];
     char dest[10];
+    int length;
 } yaidsPcapPacketHeaderTransport;
 
 #endif

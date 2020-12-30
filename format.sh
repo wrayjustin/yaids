@@ -7,17 +7,17 @@
  #
  #  COPYRIGHT (C) 2020 Justin M. Wray - wray.justin@gmail.com / https://www.justinwray.com
  #  ALL RIGHTS RESERVED
- #  
+ #
  #  Redistribution and use in source and binary forms, with or without modification,
  #  are permitted provided that the following conditions are met:
- #  
+ #
  #  1. Redistributions of source code must retain the above copyright notice, this
  #  list of conditions and the following disclaimer.
- #  
+ #
  #  2. Redistributions in binary form must reproduce the above copyright notice,
  #  this list of conditions and the following disclaimer in the documentation and/or
  #  other materials provided with the distribution.
- #  
+ #
  #  3. Neither the name of the copyright holder nor the names of its contributors
  #  may be used to endorse or promote products derived from this software without
  #  specific prior written permission.
@@ -35,6 +35,19 @@
  #
 ##
 
-./init.sh
-./configure
-make format
+if [ -f Makefile ]; then
+    make format
+else
+    # shellcheck disable=SC2044
+    for f in $(find src -name "*.c" -or -name "*.h"); do
+        echo "Formatting: $f"
+        indent -kr -ci4 -cli4 -i4 -nut --no-tabs "$f" && rm "$f~"
+        sed -E -i 's/^\s+$//g' "$f"
+    done
+    # shellcheck disable=SC2044
+    for f in $(find . -name "*.sh"); do
+        echo "Formatting: $f"
+        shfmt -i 4 -ci -sr -fn -kp -w "$f"
+        sed -E -i 's/^\s+\{\s*$/\{/g' "$f"
+    done
+fi

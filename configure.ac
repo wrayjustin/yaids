@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([yaids], [0.0.3], [wray.justin@gmail.com])
+AC_INIT([yaids], [0.0.4], [wray.justin@gmail.com])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 
@@ -62,10 +62,14 @@ AC_CHECK_HEADERS([yara/types.h],, AC_ERROR([Missing libyara-dev Header]))
 AC_CHECK_HEADER_STDBOOL
 
 # Checks for library functions.
-AC_CHECK_FUNCS([memset strndup])
+AC_CHECK_FUNCS([atoi])
+AC_CHECK_FUNCS([memset])
+AC_CHECK_FUNCS([memcpy])
+AC_CHECK_FUNCS([strndup])
 AC_CHECK_FUNCS([gmtime_r])
 AC_CHECK_FUNCS([malloc_trim])
 AC_CHECK_FUNCS([strlcpy])
+AC_CHECK_FUNCS([strncpy])
 
 # Fortify
 AC_ARG_ENABLE([fortify2],

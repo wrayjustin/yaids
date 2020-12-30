@@ -77,7 +77,8 @@ extern int yaidsconf_get_default_thread_count(void)
     return get_nprocs() * 4;
 }
 
-extern void yaidsconf_config_init(yaidsConfig_ptr config, char* exeName, int options)
+extern void yaidsconf_config_init(yaidsConfig_ptr config, char *exeName,
+                                  int options)
 {
     if (config->status != YAIDS_PENDING_CONFIG) {
         return;
@@ -123,7 +124,8 @@ extern void yaidsconf_config_init(yaidsConfig_ptr config, char* exeName, int opt
             epochTM = gmtime(&timestamp);
 #endif
             strftime(epochString, 32, "%s", epochTM);
-            config->outputPrefix = strndup(epochString, strlen(epochString));
+            config->outputPrefix =
+                strndup(epochString, strlen(epochString));
         }
 
         if (!config->outputPath) {
@@ -148,7 +150,8 @@ extern void yaidsconf_config_init(yaidsConfig_ptr config, char* exeName, int opt
             }
 
             if ((access(config->outputAlertFile, F_OK) == YAIDS_SUCCESS)
-                && (access(config->outputAlertFile, W_OK) != YAIDS_SUCCESS)) {
+                && (access(config->outputAlertFile, W_OK) !=
+                    YAIDS_SUCCESS)) {
                 config->status = YAIDS_PERMISSION_DENIED;
                 return;
             }

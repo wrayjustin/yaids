@@ -117,26 +117,22 @@ extern void yaidsyara_scan_packet(yaidsYaraScanner_ptr yaraScanner,
                                   yaidsConfig_ptr config)
 {
     int packetSize = packet->packetSize;
-    u_char *data;
-
-    data = calloc(sizeof(packet->packetBody), sizeof(int));
-    *data = *(const u_char *) packet->packetBody;
 
     callbackArgs->packet = packet;
     callbackArgs->outputDataQueue = yaidsOutputQueue;
     callbackArgs->config = config;
 
     if (config->debug)
-        yaidsio_print_debug_line("Scanning Packet: %p (Size: %d, TS: %d)", packet,
-                                 packet->packetSize, (int)packet->packetHeader->ts.tv_sec);
+        yaidsio_print_debug_line("Scanning Packet: %p (Size: %d, TS: %d)",
+                                 packet, packet->packetSize,
+                                 (int) packet->packetHeader->ts.tv_sec);
 
     yr_scanner_set_callback(yaraScanner->yaraScanner,
                             &yaidsyara_scanner_callback,
                             (void *) callbackArgs);
     yr_scanner_scan_mem(yaraScanner->yaraScanner,
-                        (const u_char *) packet->packetBody, packetSize);
-
-    free(data);
+                        (const u_char *) packet->yaraPacket,
+                        PKT_PREPROC_HDR_SIZE + packetSize);
 }
 
 extern int yaidsyara_scanner_callback(YR_SCAN_CONTEXT * scanContext,
@@ -149,33 +145,67 @@ extern int yaidsyara_scanner_callback(YR_SCAN_CONTEXT * scanContext,
         YR_RULE *yaraRule = (YR_RULE *) rule;
 
         char *alertString;
+        alertString =
+            yaidsyara_scanner_callback_get_alert(callbackArgs, yaraRule,
+                                                 scanContext);
 
-        if (callbackArgs->config->debug)
-            yaidsio_print_debug_line("Yara Macth Found: %p (Size: %d)",
+        if (callbackArgs->config->read_pcap_file)
+            yaidsthread_update_alert_packet_count
+                (callbackArgs->packetCounts);
+
+        if (callbackArgs->config->debug) {
+            yaidsio_print_debug_line
+                ("Adding Packet Count: Alert [PC: %d | YC: %d | AC: %d | OC: %d]",
+                 callbackArgs->packetCounts->pcapPacketCount,
+                 callbackArgs->packetCounts->yaraPacketCount,
+                 callbackArgs->packetCounts->alertPacketCount,
+                 callbackArgs->packetCounts->outputPacketCount);
+            yaidsio_print_debug_line("Yara Match Found: %p (Size: %d)",
                                      callbackArgs->packet,
                                      callbackArgs->packet->packetSize);
+        }
 
-        alertString = yaidsyara_scanner_callback_get_alert(callbackArgs, yaraRule, scanContext);
-
-        if (callbackArgs->config->read_pcap_file) yaidsthread_update_alert_packet_count(callbackArgs->packetCounts);
-        callbackArgs->packet->alert = true;
+        callbackArgs->packet->alertCount++;
         yaidsthread_add_output_data((yaidsOutputDataQueue_ptr)
                                     callbackArgs->outputDataQueue,
                                     (yaidsPcapPacket_ptr)
                                     callbackArgs->packet,
                                     (char *) alertString);
     } else if (status == CALLBACK_MSG_SCAN_FINISHED) {
-        if (!callbackArgs->packet->alert) {
-            free((void*)callbackArgs->packet->packetHeader);
+        callbackArgs->packet->yaraFinished = true;
+        if (callbackArgs->packet->alertCount == 0) {
+            free((void *) callbackArgs->packet->packetHeader);
+            free((void *) callbackArgs->packet->packetBody);
+            free((void *) callbackArgs->packet->parsedPacketHeaders);
+            free((void *) callbackArgs->packet->yaraPacket);
             free(callbackArgs->packet);
         }
-        if (callbackArgs->config->read_pcap_file) yaidsthread_update_yara_packet_count(callbackArgs->packetCounts);
+
+        if (callbackArgs->config->read_pcap_file)
+            yaidsthread_update_yara_packet_count
+                (callbackArgs->packetCounts);
+
+        if (callbackArgs->config->debug) {
+            yaidsio_print_debug_line
+                ("Adding Packet Count: Yara [PC: %d | YC: %d | AC: %d | OC: %d]",
+                 callbackArgs->packetCounts->pcapPacketCount,
+                 callbackArgs->packetCounts->yaraPacketCount,
+                 callbackArgs->packetCounts->alertPacketCount,
+                 callbackArgs->packetCounts->outputPacketCount);
+            yaidsio_print_debug_line("Yara Finished Packet: %p (Size: %d)",
+                                     callbackArgs->packet,
+                                     callbackArgs->packet->packetSize);
+        }
     }
 
     return YAIDS_SUCCESS;
 }
 
-extern char *yaidsyara_scanner_callback_get_alert(yaidsYaraCallbackArgs_ptr callbackArgs, YR_RULE *yaraRule, YR_SCAN_CONTEXT * scanContext)
+extern char *yaidsyara_scanner_callback_get_alert(yaidsYaraCallbackArgs_ptr
+                                                  callbackArgs,
+                                                  YR_RULE * yaraRule,
+                                                  YR_SCAN_CONTEXT *
+                                                  scanContext)
 {
     char *metaMatch;
     char *stringMatch;
@@ -197,13 +227,13 @@ extern char *yaidsyara_scanner_callback_get_alert(yaidsYaraCallbackArgs_ptr call
     ruleName[120] = '\0';
 
 #ifdef HAVE_GMTIME_R
-        struct tm timestamp_struct;
-        gmtime_r(&callbackArgs->packet->packetHeader->ts.tv_sec, &timestamp_struct);
-        timestamp = &timestamp_struct;
+    struct tm timestamp_struct;
+    gmtime_r(&callbackArgs->packet->packetHeader->ts.tv_sec,
+             &timestamp_struct);
+    timestamp = &timestamp_struct;
 #else
-        timestamp = (struct tm *) calloc(sizeof(struct tm), sizeof(int));
-        *timestamp =
-            *gmtime(&callbackArgs->packet->packetHeader->ts.tv_sec);
+    timestamp = (struct tm *) calloc(sizeof(struct tm), sizeof(int));
+    *timestamp = *gmtime(&callbackArgs->packet->packetHeader->ts.tv_sec);
 #endif
 
     strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S",
@@ -211,31 +241,28 @@ extern char *yaidsyara_scanner_callback_get_alert(yaidsYaraCallbackArgs_ptr call
 
     if (callbackArgs->config->fast_alert_mode) {
         snprintf(alertString, alertStringMax,
-                     "%s - %s", timeString,
-                     ruleName);
+                 "%s - %s", timeString, ruleName);
     } else {
         metaMatch =
             yaidsyara_scanner_callback_get_match_meta(scanContext,
-                                                  yaraRule);
+                                                      yaraRule);
         stringMatch =
             yaidsyara_scanner_callback_get_match_string(scanContext,
                                                         yaraRule);
 
-        yaidsPcapPacketHeader_ptr parsedPacketHeaders =
-            (yaidsPcapPacketHeader_ptr)
-            calloc(sizeof(yaidsPcapPacketHeader), sizeof(int));
-        yaidspcap_parse_pcap_headers(callbackArgs->packet,
-                                     parsedPacketHeaders);
-
-        yaidsyara_scanner_callback_get_alert_line(callbackArgs, parsedPacketHeaders, alertString, alertStringMax, timeString, ruleName, metaMatch, stringMatch);
+        yaidsyara_scanner_callback_get_alert_line(callbackArgs,
+                                                  alertString,
+                                                  alertStringMax,
+                                                  timeString, ruleName,
+                                                  metaMatch, stringMatch);
 
         free(metaMatch);
         free(stringMatch);
-        free(parsedPacketHeaders);
     }
 
     int alertStringSize;
-    alertStringSize = (int)fmin((int)strlen(alertString), alertStringMax);
+    alertStringSize =
+        (int) fmin((int) strlen(alertString), alertStringMax);
     alertString[alertStringSize] = '\0';
 
     free(ruleName);
@@ -246,53 +273,60 @@ extern char *yaidsyara_scanner_callback_get_alert(yaidsYaraCallbackArgs_ptr call
     return alertString;
 }
 
-extern void yaidsyara_scanner_callback_get_alert_line(yaidsYaraCallbackArgs_ptr callbackArgs, yaidsPcapPacketHeader_ptr parsedPacketHeaders, char* alertString, int alertStringMax, char* timeString, char* ruleName, char* metaMatch, char* stringMatch)
+extern void
+yaidsyara_scanner_callback_get_alert_line(yaidsYaraCallbackArgs_ptr
+                                          callbackArgs, char *alertString,
+                                          int alertStringMax,
+                                          char *timeString, char *ruleName,
+                                          char *metaMatch,
+                                          char *stringMatch)
 {
-        if (parsedPacketHeaders->transportExists) {
-            snprintf(alertString, alertStringMax,
-                     "%s - %s [%s] {%s} [%d:%d/%d] (%s) %s > %s - %s:%s > %s:%s",
-                     timeString, ruleName, metaMatch, stringMatch,
-                     callbackArgs->packet->packetSize,
-                     callbackArgs->packet->packetHeader->caplen,
-                     callbackArgs->packet->packetHeader->len,
-                     parsedPacketHeaders->typeList,
-                     parsedPacketHeaders->frameSource,
-                     parsedPacketHeaders->frameDest,
-                     parsedPacketHeaders->netSource,
-                     parsedPacketHeaders->transportSource,
-                     parsedPacketHeaders->netDest,
-                     parsedPacketHeaders->transportDest);
-        } else if (parsedPacketHeaders->netExists) {
-            snprintf(alertString, alertStringMax,
-                     "%s - %s [%s] {%s} [%d:%d/%d] (%s) %s > %s - %s > %s",
-                     timeString, ruleName, metaMatch, stringMatch,
-                     callbackArgs->packet->packetSize,
-                     callbackArgs->packet->packetHeader->caplen,
-                     callbackArgs->packet->packetHeader->len,
-                     parsedPacketHeaders->typeList,
-                     parsedPacketHeaders->frameSource,
-                     parsedPacketHeaders->frameDest,
-                     parsedPacketHeaders->netSource,
-                     parsedPacketHeaders->netDest);
-        } else if (parsedPacketHeaders->frameExists) {
-            snprintf(alertString, alertStringMax,
-                     "%s - %s [%s] {%s} [%d:%d/%d] (%s) %s > %s",
-                     timeString, ruleName, metaMatch, stringMatch,
-                     callbackArgs->packet->packetSize,
-                     callbackArgs->packet->packetHeader->caplen,
-                     callbackArgs->packet->packetHeader->len,
-                     parsedPacketHeaders->typeList,
-                     parsedPacketHeaders->frameSource,
-                     parsedPacketHeaders->frameDest);
-        } else {
-            snprintf(alertString, alertStringMax,
-                     "%s - %s [%s] {%s} [%d:%d/%d] (%s)", timeString,
-                     ruleName, metaMatch, stringMatch,
-                     callbackArgs->packet->packetSize,
-                     callbackArgs->packet->packetHeader->caplen,
-                     callbackArgs->packet->packetHeader->len,
-                     parsedPacketHeaders->typeList);
-        }
+    if (callbackArgs->packet->parsedPacketHeaders->transportExists) {
+        snprintf(alertString, alertStringMax,
+                 "%s - %s [%s] {%s} [%d:%d/%d] (%s) %s > %s - %s:%s > %s:%s",
+                 timeString, ruleName, metaMatch, stringMatch,
+                 callbackArgs->packet->packetSize,
+                 callbackArgs->packet->packetHeader->caplen,
+                 callbackArgs->packet->packetHeader->len,
+                 callbackArgs->packet->parsedPacketHeaders->typeList,
+                 callbackArgs->packet->parsedPacketHeaders->frameSource,
+                 callbackArgs->packet->parsedPacketHeaders->frameDest,
+                 callbackArgs->packet->parsedPacketHeaders->netSource,
+                 callbackArgs->packet->
+                 parsedPacketHeaders->transportSource,
+                 callbackArgs->packet->parsedPacketHeaders->netDest,
+                 callbackArgs->packet->parsedPacketHeaders->transportDest);
+    } else if (callbackArgs->packet->parsedPacketHeaders->netExists) {
+        snprintf(alertString, alertStringMax,
+                 "%s - %s [%s] {%s} [%d:%d/%d] (%s) %s > %s - %s > %s",
+                 timeString, ruleName, metaMatch, stringMatch,
+                 callbackArgs->packet->packetSize,
+                 callbackArgs->packet->packetHeader->caplen,
+                 callbackArgs->packet->packetHeader->len,
+                 callbackArgs->packet->parsedPacketHeaders->typeList,
+                 callbackArgs->packet->parsedPacketHeaders->frameSource,
+                 callbackArgs->packet->parsedPacketHeaders->frameDest,
+                 callbackArgs->packet->parsedPacketHeaders->netSource,
+                 callbackArgs->packet->parsedPacketHeaders->netDest);
+    } else if (callbackArgs->packet->parsedPacketHeaders->frameExists) {
+        snprintf(alertString, alertStringMax,
+                 "%s - %s [%s] {%s} [%d:%d/%d] (%s) %s > %s",
+                 timeString, ruleName, metaMatch, stringMatch,
+                 callbackArgs->packet->packetSize,
+                 callbackArgs->packet->packetHeader->caplen,
+                 callbackArgs->packet->packetHeader->len,
+                 callbackArgs->packet->parsedPacketHeaders->typeList,
+                 callbackArgs->packet->parsedPacketHeaders->frameSource,
+                 callbackArgs->packet->parsedPacketHeaders->frameDest);
+    } else {
+        snprintf(alertString, alertStringMax,
+                 "%s - %s [%s] {%s} [%d:%d/%d] (%s)", timeString,
+                 ruleName, metaMatch, stringMatch,
+                 callbackArgs->packet->packetSize,
+                 callbackArgs->packet->packetHeader->caplen,
+                 callbackArgs->packet->packetHeader->len,
+                 callbackArgs->packet->parsedPacketHeaders->typeList);
+    }
 }
 
 extern char *yaidsyara_scanner_callback_get_match_meta(YR_SCAN_CONTEXT *
@@ -358,8 +392,9 @@ extern char *yaidsyara_scanner_callback_get_match_string(YR_SCAN_CONTEXT *
                     snprintf(matchStringHexInstance, 3, "%02X",
                              yaraMatch->data[i]);
                     snprintf(matchStringInstance +
-                            strlen(matchStringInstance), strlen(matchStringHexInstance), "%s",
-                            matchStringHexInstance);
+                             strlen(matchStringInstance),
+                             strlen(matchStringHexInstance), "%s",
+                             matchStringHexInstance);
 
                     free(matchStringHexInstance);
                 }
