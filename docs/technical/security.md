@@ -1,3 +1,11 @@
+---
+title: Security
+permalink: /technical/security
+sort: 6
+---
+![YAIDS](/yaids.png)
+# Security
+
 # Security Policy
 Thank you for your interest in improving the security of `YAIDS`. We appreciate your efforts and responsible disclosure!
 

@@ -6,7 +6,8 @@ sort: 3
 ![YAIDS](/yaids.png)
 # Output
 
-By default, YAIDS processed output to both `stdout` and to log files. The default `stdout` provides alerts (rule matches), and two logs are generated - the alerts and PCAP of the triggered packets.
+By default, YAIDS processed output to both `stdout` and to log files. The default `stdout` provides alerts
+(rule matches), and two logs are generated - the alerts and PCAP of the triggered packets.
 
 The alert output contains the following fields:
  * Timestamp (YYYY-MM-DD HH:MM:SS)
@@ -20,4 +21,5 @@ The alert output contains the following fields:
 
 An example alert:
 
-`2020-12-20 01:01:01 - Metasploit_Download [$s1:0x42:3] {GET /metasploitframework-latest.msi} [171:171/171] (ETH/IP/TCP) 10:00:00:00:00:B3 > 10:00:00:00:00:F7 - 198.51.100.12:41309 > 203.0.113.37:80`
+`2020-12-20 01:01:01 - Metasploit_Download [$s1:0x42:3] {GET /metasploitframework-latest.msi}
+[171:171/171] (ETH/IP/TCP) 10:00:00:00:00:B3 > 10:00:00:00:00:F7 - 198.51.100.12:41309 > 203.0.113.37:80`

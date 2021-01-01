@@ -49,9 +49,11 @@ function run_test_output
     local COMPILED_RULES="$3"
     local TEST_MATCH="$4"
     local EXPECTED_RESULTS="$5"
+    local ADDITIONAL_OPTIONS="$6"
 
     local RESULTS
-    RESULTS="$(yaids -r "$DIR_PATH/pcaps/$INPUT_FILE" -y "$DIR_PATH//$COMPILED_RULES" -o 2> /dev/null | grep -c "$TEST_MATCH")"
+    # shellcheck disable=SC2086
+    RESULTS="$(yaids $ADDITIONAL_OPTIONS -r "$DIR_PATH/pcaps/$INPUT_FILE" -y "$DIR_PATH//$COMPILED_RULES" -o 2> /dev/null | grep -c "$TEST_MATCH")"
 
     if [ "$RESULTS" == "$EXPECTED_RESULTS" ]; then
         return 0
@@ -67,8 +69,10 @@ function run_test_alert_file
     local COMPILED_RULES="$3"
     local TEST_MATCH="$4"
     local EXPECTED_RESULTS="$5"
+    local ADDITIONAL_OPTIONS="$6"
 
-    yaids -r "$DIR_PATH/pcaps/$INPUT_FILE" -y "$DIR_PATH/$COMPILED_RULES" -w "$DIR_PATH" -n "$TEST_NAME" -s 1> /dev/null 2> /dev/null
+    # shellcheck disable=SC2086
+    yaids $ADDITIONAL_OPTIONS -r "$DIR_PATH/pcaps/$INPUT_FILE" -y "$DIR_PATH/$COMPILED_RULES" -w "$DIR_PATH" -n "$TEST_NAME" -s 1> /dev/null 2> /dev/null
 
     local RESULTS
     RESULTS="$(grep -c "$TEST_MATCH" "$DIR_PATH/yaids.$TEST_NAME.alerts" 2> /dev/null)"
@@ -90,11 +94,13 @@ function run_test_pcap_file
     local COMPILED_RULES="$3"
     local TEST_MATCH="$4"
     local EXPECTED_RESULTS="$5"
+    local ADDITIONAL_OPTIONS="$6"
 
     yaids -r "$DIR_PATH/pcaps/$INPUT_FILE" -y "$DIR_PATH/$COMPILED_RULES" -w "$DIR_PATH" -n "$TEST_NAME" -s 1> /dev/null 2> /dev/null
 
     local RESULTS
-    RESULTS="$(yaids -r "$DIR_PATH/yaids.$TEST_NAME.pcap" -y "$DIR_PATH/$COMPILED_RULES" -o 2> /dev/null | grep -c "$TEST_MATCH")"
+    # shellcheck disable=SC2086
+    RESULTS="$(yaids $ADDITIONAL_OPTIONS -r "$DIR_PATH/yaids.$TEST_NAME.pcap" -y "$DIR_PATH/$COMPILED_RULES" -o 2> /dev/null | grep -c "$TEST_MATCH")"
 
     rm -rf "$DIR_PATH/yaids.$TEST_NAME.alerts"
     rm -rf "$DIR_PATH/yaids.$TEST_NAME.pcap"
@@ -115,10 +121,11 @@ function run_test
     local COMPILED_RULES="$5"
     local TEST_MATCH="$6"
     local EXPECTED_RESULTS="$7"
+    local ADDITIONAL_OPTIONS="$8"
 
     ((++TESTS_RUN))
     printf "[%-20s%-20s#%-2s]%40s" "$TEST_NAME" "$TEST_DESC" "$TEST_COUNT" ""
-    if $TEST_FUNCTION "$TEST_NAME" "$INPUT_FILE" "$COMPILED_RULES" "$TEST_MATCH" "$EXPECTED_RESULTS"; then
+    if $TEST_FUNCTION "$TEST_NAME" "$INPUT_FILE" "$COMPILED_RULES" "$TEST_MATCH" "$EXPECTED_RESULTS" "$ADDITIONAL_OPTIONS"; then
         ((++TESTS_PASSED))
         printf "+ \e[38;5;82mPASSED\e[0m\n"
     else
@@ -134,17 +141,27 @@ function run_tests
     local TEST_NAME="$3"
     local TEST_MATCH="$4"
     local EXPECTED_RESULTS="$5"
+    local ADDITIONAL_OPTIONS="$6"
 
-    local COMPILED_RULES="$RULE_FILE"c
+    local COMPILED_RULES
 
-    if [ ! -f "$DIR_PATH/$COMPILED_RULES" ]; then
-        yaidsc "$DIR_PATH"/"$RULE_FILE" "$DIR_PATH"/"$COMPILED_RULES"
+    if [[ "$RULE_FILE" =~ Combined ]]; then
+        COMPILED_RULES="$(echo "$RULE_FILE" | cut -d ' '  -f 3)"
+        local RULES_INPUT="$(echo "$RULE_FILE" | sed -e 's/'"$COMPILED_RULES"'//g' -e 's/ $//g' | tr ' ' '\n' | awk '{ print "'"$DIR_PATH"'/" $0 }' | xargs)"
+        # shellcheck disable=SC2086
+        yaidsc $RULES_INPUT "$DIR_PATH"/"$COMPILED_RULES"
+
+    else
+        COMPILED_RULES="$RULE_FILE"c
+        if [ ! -f "$DIR_PATH/$COMPILED_RULES" ]; then
+            yaidsc "$DIR_PATH"/"$RULE_FILE" "$DIR_PATH"/"$COMPILED_RULES"
+        fi
     fi
 
     for TEST_COUNT in {01..03}; do
-        run_test "$TEST_NAME" "run_test_output" "Output Test" "$INPUT_FILE" "$COMPILED_RULES" "$TEST_MATCH" "$EXPECTED_RESULTS"
-        run_test "$TEST_NAME" "run_test_alert_file" "Alert File Test" "$INPUT_FILE" "$COMPILED_RULES" "$TEST_MATCH" "$EXPECTED_RESULTS"
-        run_test "$TEST_NAME" "run_test_pcap_file" "PCAP File Test" "$INPUT_FILE" "$COMPILED_RULES" "$TEST_MATCH" "$EXPECTED_RESULTS"
+        run_test "$TEST_NAME" "run_test_output" "Output Test" "$INPUT_FILE" "$COMPILED_RULES" "$TEST_MATCH" "$EXPECTED_RESULTS" "$ADDITIONAL_OPTIONS"
+        run_test "$TEST_NAME" "run_test_alert_file" "Alert File Test" "$INPUT_FILE" "$COMPILED_RULES" "$TEST_MATCH" "$EXPECTED_RESULTS" "$ADDITIONAL_OPTIONS"
+        run_test "$TEST_NAME" "run_test_pcap_file" "PCAP File Test" "$INPUT_FILE" "$COMPILED_RULES" "$TEST_MATCH" "$EXPECTED_RESULTS" "$ADDITIONAL_OPTIONS"
     done
 }
 
@@ -208,5 +225,9 @@ run_tests "test.pcap" "test_D.yar" "test_D_08_PCAP" "test_D_08" "38"
 run_tests "test.pcapng" "test_D.yar" "test_D_08_NG" "test_D_08" "38"
 run_tests "test.pcap" "test_D.yar" "test_D_09_PCAP" "test_D_09" "25"
 run_tests "test.pcapng" "test_D.yar" "test_D_09_NG" "test_D_09" "25"
+run_tests "test.pcap" "test_A.yar test_B.yar test_E_Combined.yarc" "test_E_PCAP" "test_" "46"
+run_tests "test.pcapng" "test_A.yar test_B.yar test_E_Combined.yarc" "test_E_NG" "test_" "46"
+run_tests "test.pcap" "test_F.yar" "test_F_PCAP" "test_F_01" "2" "-f $DIR_PATH/test_F.bpf"
+run_tests "test.pcapng" "test_F.yar" "test_F_PNG" "test_F_01" "2" "-f $DIR_PATH/test_F.bpf"
 cleanup_tests
 finalize_tests

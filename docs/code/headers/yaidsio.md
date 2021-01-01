@@ -143,6 +143,13 @@ packet)
 
  
 
+char \* 
+
+<a href="/code/headers/yaidsio#af7244fc5e1ac35a8fba101b2cf1b9625" class="el">yaidsio_read_file</a>
+(char \*fileName)
+
+ 
+
 Function Documentation
 ----------------------
 
@@ -431,6 +438,24 @@ Function Documentation
 <td></td>
 <td>)</td>
 <td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<span id="af7244fc5e1ac35a8fba101b2cf1b9625"></span>
+
+<span class="permalink">[◆ ](#af7244fc5e1ac35a8fba101b2cf1b9625)</span>yaidsio\_read\_file()
+--------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>char* yaidsio_read_file</td>
+<td>(</td>
+<td>char * </td>
+<td><em>fileName</em></td>
+<td>)</td>
 <td></td>
 </tr>
 </tbody>

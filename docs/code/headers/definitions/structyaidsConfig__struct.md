@@ -123,8 +123,33 @@ char \* 
 
  
 
+char \* 
+
+<a href="/code/headers/definitions/structyaidsConfig__struct#a84acfb29d699aeb1c27567c92a2ec54e" class="el">pcapFilterFile</a>
+
+ 
+
+char \* 
+
+<a href="/code/headers/definitions/structyaidsConfig__struct#ad782510345f3348cbea606f120af3155" class="el">bpfContents</a>
+
+ 
+
 Member Data Documentation
 -------------------------
+
+<span id="ad782510345f3348cbea606f120af3155"></span>
+
+<span class="permalink">[◆ ](#ad782510345f3348cbea606f120af3155)</span>bpfContents
+----------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>char* yaidsConfig_struct::bpfContents</td>
+</tr>
+</tbody>
+</table>
 
 <span id="a39d39499b634f7389042d956c6dc26c9"></span>
 
@@ -239,6 +264,19 @@ Member Data Documentation
 <tbody>
 <tr class="odd">
 <td>char* yaidsConfig_struct::pcapDevice</td>
+</tr>
+</tbody>
+</table>
+
+<span id="a84acfb29d699aeb1c27567c92a2ec54e"></span>
+
+<span class="permalink">[◆ ](#a84acfb29d699aeb1c27567c92a2ec54e)</span>pcapFilterFile
+-------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>char* yaidsConfig_struct::pcapFilterFile</td>
 </tr>
 </tbody>
 </table>

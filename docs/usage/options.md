@@ -8,7 +8,7 @@ sort: 1
 
 You can obtain more information from the help message by running: `yaids --help` or `man yaids`
 ```
-YAIDS -- 0.0.1
+YAIDS -- 0.0.5
         Yara as an Intrusion Detection System / Yet Another Intrusion Detection System
         An Intrusion Detection System (IDS), utilizing Yara and multi-threading
         COPYRIGHT (C) Justin M. Wray | Licensed: BSD 3-Clause
@@ -20,6 +20,7 @@ Usage:
                 -y    <FILE>              Rules: Yara Rules File, compiled (required)
                 -n    <NAME>              Prefix Name: Output files, prefix (optional, defaults to epoch)
                 -w    <PATH>              Output Path: Output path (optional, defaults to current working directory)
+                -f    <FILE>              BPF: BPF (PCAP Filter) File (optional, no traffic filtering)
                 -t    <INT>               Threads: Number of Yara Threads (optional, defaults to 2 + 4 x CPU cores)
                 -l    <INT>               Timelimit: Number of seconds to run, before exiting (optional, defaults to 0 - run until finished or interrupted)
                 -s                        Silent Mode: Write output files, but don't output alerts to STDOUT (optional, incompatible with Output Only Mode)

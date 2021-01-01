@@ -292,8 +292,8 @@ yaidsyara_scanner_callback_get_alert_line(yaidsYaraCallbackArgs_ptr
                  callbackArgs->packet->parsedPacketHeaders->frameSource,
                  callbackArgs->packet->parsedPacketHeaders->frameDest,
                  callbackArgs->packet->parsedPacketHeaders->netSource,
-                 callbackArgs->packet->
-                 parsedPacketHeaders->transportSource,
+                 callbackArgs->packet->parsedPacketHeaders->
+                 transportSource,
                  callbackArgs->packet->parsedPacketHeaders->netDest,
                  callbackArgs->packet->parsedPacketHeaders->transportDest);
     } else if (callbackArgs->packet->parsedPacketHeaders->netExists) {

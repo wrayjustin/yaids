@@ -50,6 +50,7 @@
 #define YAIDS_THREAD_ERROR                  30
 #define YAIDS_PCAP_ERROR                    40
 #define YAIDS_PCAP_DEVICE_DOES_NOT_EXIST    41
+#define YAIDS_PCAP_FILTER_ERROR             42
 #define YAIDS_YARA_ERROR                    50
 #define YAIDS_YARA_MATCH                    100
 #define YAIDS_YARA_NOMATCH                  101

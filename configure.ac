@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([yaids], [0.0.4], [wray.justin@gmail.com])
+AC_INIT([yaids], [0.0.5], [wray.justin@gmail.com])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 
@@ -88,9 +88,16 @@ AC_ARG_ENABLE([fortify1],
 
 # Debug
 AC_ARG_ENABLE([debug],
-  [AS_HELP_STRING([--enable-debug], [compiles with -pg -g -ggdb options (Default: Disabled)])],
+  [AS_HELP_STRING([--enable-debug], [compiles with -g -ggdb options (Default: Disabled)])],
   [if test x$enableval = xyes; then
-    CFLAGS="-pg -g -ggdb $CFLAGS"
+    CFLAGS="-g -ggdb $CFLAGS"
+  fi])
+
+# Profiing (GMON)
+AC_ARG_ENABLE([profiling],
+  [AS_HELP_STRING([--enable-profiling], [compiles with -pg options (Default: Disabled)])],
+  [if test x$enableval = xyes; then
+    CFLAGS="-pg $CFLAGS"
   fi])
 
 # Makefiles

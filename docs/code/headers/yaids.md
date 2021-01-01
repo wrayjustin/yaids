@@ -109,6 +109,12 @@ Include dependency graph for yaids.h:
 
 \#define 
 
+<a href="/code/headers/yaids#a05c243447c217b86595ad4c4d43831bd" class="el">YAIDS_PCAP_FILTER_ERROR</a>   42
+
+ 
+
+\#define 
+
 <a href="/code/headers/yaids#aec25c1cbac59b0234f2af162e1453899" class="el">YAIDS_YARA_ERROR</a>   50
 
  
@@ -329,6 +335,19 @@ Macro Definition Documentation
 <tbody>
 <tr class="odd">
 <td>#define YAIDS_PCAP_ERROR   40</td>
+</tr>
+</tbody>
+</table>
+
+<span id="a05c243447c217b86595ad4c4d43831bd"></span>
+
+<span class="permalink">[◆ ](#a05c243447c217b86595ad4c4d43831bd)</span>YAIDS\_PCAP\_FILTER\_ERROR
+-------------------------------------------------------------------------------------------------
+
+<table>
+<tbody>
+<tr class="odd">
+<td>#define YAIDS_PCAP_FILTER_ERROR   42</td>
 </tr>
 </tbody>
 </table>

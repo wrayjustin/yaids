@@ -55,12 +55,14 @@ extern void yaidsio_print_debug_line(const char *format, ...)
     char line[BUFSIZ];
     va_list args;
 
-    va_start(args, format);
-    status = vsnprintf(line, sizeof(line), format, args);
-    va_end(args);
+    if (format) {
+        va_start(args, format);
+        status = vsnprintf(line, sizeof(line), format, args);
+        va_end(args);
 
-    if ((status > YAIDS_SUCCESS) && (global_yaidsRunning)) {
-        fprintf(stderr, "[DEBUG]\t\t%s\n", line);
+        if ((status > YAIDS_SUCCESS) && (global_yaidsRunning)) {
+            fprintf(stderr, "[DEBUG]\t\t%s\n", line);
+        }
     }
 }
 
@@ -70,12 +72,14 @@ extern void yaidsio_print_error_line(const char *format, ...)
     char line[BUFSIZ];
     va_list args;
 
-    va_start(args, format);
-    status = vsnprintf(line, sizeof(line), format, args);
-    va_end(args);
+    if (format) {
+        va_start(args, format);
+        status = vsnprintf(line, sizeof(line), format, args);
+        va_end(args);
 
-    if (status > YAIDS_SUCCESS) {
-        fprintf(stderr, "[ERROR]\t\t%s\n", line);
+        if (status > YAIDS_SUCCESS) {
+            fprintf(stderr, "[ERROR]\t\t%s\n", line);
+        }
     }
 }
 
@@ -85,12 +89,14 @@ extern void yaidsio_print_std_line(const char *format, ...)
     char line[BUFSIZ];
     va_list args;
 
-    va_start(args, format);
-    status = vsnprintf(line, sizeof(line), format, args);
-    va_end(args);
+    if (format) {
+        va_start(args, format);
+        status = vsnprintf(line, sizeof(line), format, args);
+        va_end(args);
 
-    if (status > YAIDS_SUCCESS) {
-        fprintf(stdout, "%s\n", line);
+        if (status > YAIDS_SUCCESS) {
+            fprintf(stdout, "%s\n", line);
+        }
     }
 }
 
@@ -100,21 +106,25 @@ extern void yaidsio_print_std_string(const char *format, ...)
     char line[BUFSIZ];
     va_list args;
 
-    va_start(args, format);
-    status = vsnprintf(line, sizeof(line), format, args);
-    va_end(args);
+    if (format) {
+        va_start(args, format);
+        status = vsnprintf(line, sizeof(line), format, args);
+        va_end(args);
 
-    if (status > YAIDS_SUCCESS) {
-        fprintf(stdout, "%s", line);
+        if (status > YAIDS_SUCCESS) {
+            fprintf(stdout, "%s", line);
+        }
     }
 }
 
 extern void yaidsio_print_horizontal_line(int chars)
 {
-    yaidsio_print_std_string("\x1b(0");
-    for (int idx = 0; idx <= chars; idx++)
-        yaidsio_print_std_string("\x71");
-    yaidsio_print_std_string("\x1b(B\n");
+    if (chars) {
+        yaidsio_print_std_string("\x1b(0");
+        for (int idx = 0; idx <= chars; idx++)
+            yaidsio_print_std_string("\x71");
+        yaidsio_print_std_string("\x1b(B\n");
+    }
 }
 
 extern void yaidsio_print_header(void)
@@ -150,6 +160,8 @@ extern void yaidsio_help(char *exe)
                            "Prefix Name: Output files, prefix (optional, defaults to epoch)");
     yaidsio_print_arg_line("w", "<PATH>",
                            "Output Path: Output path (optional, defaults to current working directory)");
+    yaidsio_print_arg_line("f", "<FILE>",
+                           "BPF: BPF (PCAP Filter) File (optional, no traffic filtering)");
     yaidsio_print_arg_line("t", "<INT>",
                            "Threads: Number of Yara Threads (optional, defaults to 2 + 4 x CPU cores)");
     yaidsio_print_arg_line("l", "<INT>",
@@ -182,7 +194,7 @@ extern yaidsConfig yaidsio_getopts(int argc, char **argv)
 
     opterr = 0;
 
-    while ((argopts = getopt(argc, argv, "soxahdvi:r:y:n:w:t:l:")) != -1)
+    while ((argopts = getopt(argc, argv, "soxahdvi:r:y:n:f:w:t:l:")) != -1)
         switch (argopts) {
             case 'i':
                 config.pcapDevice = optarg;
@@ -199,6 +211,9 @@ extern yaidsConfig yaidsio_getopts(int argc, char **argv)
                 break;
             case 'w':
                 config.outputPath = optarg;
+                break;
+            case 'f':
+                config.pcapFilterFile = optarg;
                 break;
             case 't':
                 config.threads = atoi(optarg);
@@ -321,6 +336,11 @@ extern void yaidsio_exit_error(int errorCode)
             yaidsio_print_error_line
                 ("An error has occured. The network interface does not exist. YAIDS is exiting.");
             break;
+        case YAIDS_PCAP_FILTER_ERROR:
+            yaidsio_print_header();
+            yaidsio_print_error_line
+                ("An error has occured. The BPF (filter) is invalid. YAIDS is exiting.");
+            break;
         case YAIDS_YARA_ERROR:
             yaidsio_print_header();
             yaidsio_print_error_line
@@ -373,4 +393,27 @@ extern void yaidsio_write_pcap(FILE * pcapFileHandle,
 {
     if (pcapFileHandle)
         yaidspcap_write_packet(pcapFileHandle, packet);
+}
+
+extern char *yaidsio_read_file(char *fileName)
+{
+    long fileSize;
+    FILE *fileHandle;
+    char *fileContents;
+
+    if ((fileName)
+        && (fileHandle = fopen(fileName, "rb"))) {
+        fseek(fileHandle, 0, SEEK_END);
+        fileSize = ftell(fileHandle);
+        fseek(fileHandle, 0, SEEK_SET);
+        fileContents = calloc(fileSize + 1, sizeof(char));
+        if ((fileContents)
+            && (fread(fileContents, 1, fileSize, fileHandle))) {
+            return fileContents;
+        }
+    } else {
+        return NULL;
+    }
+
+    return NULL;
 }

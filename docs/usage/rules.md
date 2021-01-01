@@ -6,16 +6,16 @@ sort: 4
 ![YAIDS](/yaids.png)
 # Rules
 
-YAIDS supports any Yara-compatable rule, including enabled and properly configured modules.
+YAIDS supports any Yara-compatible rule, including enabled and adequately configured modules.
 
-For convinenve, YAIDS also provides a "drop-in" replacement for `yara` (the Yara Rules Compiler).
+For convenience, YAIDS also provides a "drop-in" replacement for `yara` (the Yara Rules Compiler).
 In addition to some feature enhancements, `yaidsc` sets "external" variables for various packet offsets.
 
 You can learn more about writing Yara rules from the Yara documentation: [Writing Yara Rules](https://yara.readthedocs.io/en/stable/writingrules.html).
 
-# yaidsc
+#### yaidsc
 `yaidsc` is a drop-in replacement for `yarac` using an identical syntax. If needed, you can also pass
-additional options to `yarac`. Note that `yaidsc` is not a binary replacement for `yarac`, it is a
+additional options to `yarac`. Note that `yaidsc` is not a binary replacement for `yarac`; it is a
 wrapper script. The two major feature improvments are:
  * Multi-File Support, including Directories (which will compile all `*.yar` files in the directories provided)
  * External Variables for Packet Fields
@@ -29,14 +29,14 @@ Usage:
  * Namespaces can be provided, but only for individual files (not directories).
  ```
 
-# Packet Headers and Offsets
+#### Packet Headers and Offsets
 To provide simple network-related rule creation, without the need to perform complex header parsing and
 calculations, `yaids` includes a padded string-based header before the PCAP data. This additional data
 is only included during the `yara` scanning (not in the PCAP output, etc.). However, this does mean that
-the Packet Offsets are modified, specifically by `255` bytes.  As a result, the raw packet data (including
+the Packet Offsets are modified, specifically by `255` bytes. As a result, the raw packet data (including
 the unprocessed header) begins at offset `256`.
 
-# Offsets
+##### Offsets
 The processed (string-based) header uses the following format:
 
 | Value                                                              | Offset Location | Field Size |
@@ -48,19 +48,19 @@ The processed (string-based) header uses the following format:
 | Transport Protocol                                                 | 34              | 14 (Str)   |
 | Frane Source Address                                               | 48              | 17 (Str)   |
 | Frame Destination Address                                          | 65              | 17 (Str)   |
-| Network Source Adderess                                            | 82              | 46 (Str)   |
+| Network Source Address                                            | 82              | 46 (Str)   |
 | Transport Source (Port)                                            | 128             | 5 (Str)    |
 | Network Destination Address:                                       | 133             | 46 (Str)   |
 | Transport Destination (Port)                                       | 179             | 5 (Str)    |
 
 Again, the packet data begins at byte `256`.
 
-# Offset Examples
+##### Offset Examples
 One of the most powerful values of the processed header is the `Payload Offset`.
 This offset value can be used in a `yara` `condition`, to match payload-specific data.
 Keep in mind, you need to jump an additional `255` bytes to the begining of he packet data,
 in additon to payload offset. For example:
-```
+```yara
 rule example_01 {
     meta:
         author = "YAIDS.io"
@@ -69,13 +69,13 @@ rule example_01 {
     strings:
         $string1 = "GET"
     condition:
-        $string1 at (int8(0) + 255)z
+        $string1 at (int8(0) + 255)
 }
 ```
 
 The remaining header offsets provide the ability to perform conditional matching (filtering) on the
 listed packet attributes (addresses, ports, etc.). For example:
-```
+```yara
 rule example_02 {
     meta:
         author = "YAIDS.io"
@@ -106,12 +106,12 @@ rule example_02 {
 }
 ```
 
-# Yara External Variables
-To simplify the usgae of the packet header values, `yaidsc` (the rule compliler) will automatically
-provide `external variables`.  When using `yaidsc` to compile your rules, theres not need to memorize
+##### Yara External Variables
+To simplify using the packet header values, `yaidsc` (the rule compliler) will automatically
+provide `external variables`. When using `yaidsc` to compile your rules, there's no need to memorize
 the offset locations.
 
-The Externabl Variables:
+External Variables:
 
 | Value                                                              | Variable          |
 | ------------------------------------------------------------------ | ----------------- |
@@ -127,7 +127,7 @@ The Externabl Variables:
 | Transport Destination (Port)                                       | transportDest     |
 
 Compare the previous two example to this example using the external variables:
-```
+```yara
 rule example_03 {
     meta:
         author = "YAIDS.io"
@@ -153,23 +153,23 @@ rule example_03 {
         $networkSource at networkSource and
         $transportSource at transportSource and
         $networkDest at networkDest and
-        $transportDest at transportDest
+        $transportDest at transportDest and
         $string1 at (int8(0) + 255)
 }
 ```
 
-# Supported Protocols
-YAIDS supports all libpcap-comptable data (network or otherwise).
+#### Supported Protocols
+YAIDS supports all libpcap-compatible data (network or otherwise).
 
-owever the header parsing does have some limitations.
+However, the header parsing does have some limitations. Only the following protocols will be parsed.
 
-# Supported Layer-2 / Frame Protocols
+##### Supported Layer-2 / Frame Protocols
 
 | Protocol Name | YAIDS Value |
-|---------------|-------------|
+| ------------- | ----------- |
 | Ethernet      | ETH         |
 
-# Supported Layer-3 / Network Protocols
+##### Supported Layer-3 / Network Protocols
 
 | Protocol Name | YAIDS Value |
 | ------------- | ----------- |
@@ -205,7 +205,7 @@ owever the header parsing does have some limitations.
 | VEXP          | VEXP        |
 | VPROD         | VPROD       |
 
-# Supported Layer-4 / Transport Protocols
+##### Supported Layer-4 / Transport Protocols
 
 | Protocol Name | YAIDS Value |
 | ------------- | ----------- |
@@ -214,7 +214,7 @@ owever the header parsing does have some limitations.
 | ICMP          | ICMP        |
 
 Remember, you can write rules for _any_ traffic type, but if the protocols are not listed above,
-`yaids` will not automatically parse the headers and therefore will not populare the `External Variables`
+`yaids` will not automatically parse the headers and therefore will not populate the `External Variables`
 
-In cases where the protocol is unsupported the default value will be "UNKN", which will be used in the
+In cases where the protocol is unsupported, the default value will be "UNKN", which will be used in the
 alert output and the `External Variables`.

@@ -53,5 +53,6 @@ extern void yaidsio_print_alert(char *alert);
 extern void yaidsio_write_alert(FILE * alertFileHandle, char *alert);
 extern void yaidsio_write_pcap(FILE * pcapFileHandle,
                                yaidsPcapPacket_ptr packet);
+extern char * yaidsio_read_file(char* fileName);
 
 #endif

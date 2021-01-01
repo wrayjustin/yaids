@@ -901,12 +901,11 @@ extern int yaidsthread_run_threads(bool * yaidsRunning, yaidsConfig config,     
              threadListCount++) {
             yaidsio_print_debug_line("\t threadId: %u",
                                      (unsigned int) (&threadList
-                                                     [threadListCount])->threadInfo->
-                                     threadId);
+                                                     [threadListCount])->
+                                     threadInfo->threadId);
             yaidsio_print_debug_line("\t\t threadType: %d",
-                                     (&threadList
-                                      [threadListCount])->threadInfo->
-                                     threadType);
+                                     (&threadList[threadListCount])->
+                                     threadInfo->threadType);
         }
     }
 

@@ -97,6 +97,18 @@ extern int yaidspcap_create_handle(yaidsConfig_ptr config,
                            pcapHandle->errorBuffer);
     }
 
+    if (config->bpfContents) {
+        struct bpf_program pcapFilter;
+        if ((pcap_compile
+             (pcapHandle->pcapHandle, &pcapFilter, config->bpfContents, 1,
+              PCAP_NETMASK_UNKNOWN) == -1)
+            || (pcap_setfilter(pcapHandle->pcapHandle, &pcapFilter)) == -1) {
+            return YAIDS_PCAP_FILTER_ERROR;
+        } else {
+            free(config->bpfContents);
+        }
+    }
+
     if (pcapHandle->pcapHandle == NULL) {
         yaidsio_print_error_line("PCAP ERROR: %s",
                                  pcapHandle->errorBuffer);

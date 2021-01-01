@@ -5,7 +5,9 @@ Yara as an Intrusion Detection System / Yet Another Intrusion Detection System
 
 An Intrusion Detection System (IDS), utilizing Yara and multi-threading
 
-[![Build](https://github.com/wrayjustin/yaids/workflows/Build/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3ABuild) [![Code Analysis](https://github.com/wrayjustin/yaids/workflows/Code%20Analysis/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3A%22Code+Analysis%22) [![Tests](https://github.com/wrayjustin/yaids/workflows/Tests/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3ATests)
+[![Build](https://github.com/wrayjustin/yaids/workflows/Build/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3ABuild)
+[![Code Analysis](https://github.com/wrayjustin/yaids/workflows/Code%20Analysis/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3A%22Code+Analysis%22)
+[![Tests](https://github.com/wrayjustin/yaids/workflows/Tests/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3ATests)
 
 ## Installation
 
@@ -37,7 +39,8 @@ An Intrusion Detection System (IDS), utilizing Yara and multi-threading
 1. Install Development Tools (git, gcc, glibc, etc.)
 2. Install `libpcap` (including development headers)
 3. Install `libyara` (including development headers)
-4. Compile (from the `src` directory): `gcc <GCC OPTIONS> yaids.c yaidsconf.c yaidsio.c yaidspcap.c yaidsyara.c yaidsthread.c -o yaids -I. -I.. -I../include/ -lpcap -lyara -lpthread -lm <ADDITIONAL LIBRARIES>`
+4. Compile (from the `src` directory): `gcc <GCC OPTIONS> yaids.c yaidsconf.c yaidsio.c yaidspcap.c
+yaidsyara.c yaidsthread.c -o yaids -I. -I.. -I../include/ -lpcap -lyara -lpthread -lm <ADDITIONAL LIBRARIES>`
 
 ## Usage
 YAIDS can run on either an interface (live capture) or stored PCAP files. You can use any Yara supported rules.
@@ -50,7 +53,7 @@ To process an exiisting PCAP file, use the following basic options: `yaids -r <p
 ### Options
 You can obtain more information from the help message by running: `yaids --help` or `man yaids`
 ```
-YAIDS -- 0.0.1
+YAIDS -- 0.0.5
         Yara as an Intrusion Detection System / Yet Another Intrusion Detection System
         An Intrusion Detection System (IDS), utilizing Yara and multi-threading
         COPYRIGHT (C) Justin M. Wray | Licensed: BSD 3-Clause
@@ -62,6 +65,7 @@ Usage:
                 -y    <FILE>              Rules: Yara Rules File, compiled (required)
                 -n    <NAME>              Prefix Name: Output files, prefix (optional, defaults to epoch)
                 -w    <PATH>              Output Path: Output path (optional, defaults to current working directory)
+                -f    <FILE>              BPF: BPF (PCAP Filter) File (optional, no traffic filtering)
                 -t    <INT>               Threads: Number of Yara Threads (optional, defaults to 2 + 4 x CPU cores)
                 -l    <INT>               Timelimit: Number of seconds to run, before exiting (optional, defaults to 0 - run until finished or interrupted)
                 -s                        Silent Mode: Write output files, but don't output alerts to STDOUT (optional, incompatible with Output Only Mode)
@@ -74,7 +78,8 @@ Usage:
 ```
 
 ### Output
-By default, YAIDS processed output to both `stdout` and to log files. The default `stdout` provides alerts (rule matches), and two logs are generated - the alerts and PCAP of the triggered packets.
+By default, YAIDS processed output to both `stdout` and to log files. The default `stdout` provides alerts
+(rule matches), and two logs are generated - the alerts and PCAP of the triggered packets.
 
 The alert output contains the following fields:
  * Timestamp (YYYY-MM-DD HH:MM:SS)
@@ -88,10 +93,11 @@ The alert output contains the following fields:
 
 An example alert:
 
-`2020-12-20 01:01:01 - Metasploit_Download [$s1:0x42:3] {GET /metasploitframework-latest.msi} [171:171/171] (ETH/IP/TCP) 10:00:00:00:00:B3 > 10:00:00:00:00:F7 - 198.51.100.12:41309 > 203.0.113.37:80`
+`2020-12-20 01:01:01 - Metasploit_Download [$s1:0x42:3] {GET /metasploitframework-latest.msi}
+[171:171/171] (ETH/IP/TCP) 10:00:00:00:00:B3 > 10:00:00:00:00:F7 - 198.51.100.12:41309 > 203.0.113.37:80`
 
 ### Rules
-YAIDS supports any Yara-compatable rule, including enabled and properly configured modules.
+YAIDS supports any Yara-compatible rule, including enabled and adequately configured modules.
 
 For convenience, YAIDS also provides a "drop-in" replacement for `yara` (the Yara Rules Compiler).
 In addition to some feature enhancements, `yaidsc` sets "external" variables for various packet offsets.
@@ -100,7 +106,7 @@ You can learn more about writing Yara rules from the Yara documentation: [Writin
 
 #### yaidsc
 `yaidsc` is a drop-in replacement for `yarac` using an identical syntax. If needed, you can also pass
-additional options to `yarac`. Note that `yaidsc` is not a binary replacement for `yarac`, it is a
+additional options to `yarac`. Note that `yaidsc` is not a binary replacement for `yarac`; it is a
 wrapper script. The two major feature improvments are:
  * Multi-File Support, including Directories (which will compile all `*.yar` files in the directories provided)
  * External Variables for Packet Fields
@@ -118,7 +124,7 @@ Usage:
 To provide simple network-related rule creation, without the need to perform complex header parsing and
 calculations, `yaids` includes a padded string-based header before the PCAP data. This additional data
 is only included during the `yara` scanning (not in the PCAP output, etc.). However, this does mean that
-the Packet Offsets are modified, specifically by `255` bytes.  As a result, the raw packet data (including
+the Packet Offsets are modified, specifically by `255` bytes. As a result, the raw packet data (including
 the unprocessed header) begins at offset `256`.
 
 ##### Offsets
@@ -133,7 +139,7 @@ The processed (string-based) header uses the following format:
 | Transport Protocol                                                 | 34              | 14 (Str)   |
 | Frane Source Address                                               | 48              | 17 (Str)   |
 | Frame Destination Address                                          | 65              | 17 (Str)   |
-| Network Source Adderess                                            | 82              | 46 (Str)   |
+| Network Source Address                                            | 82              | 46 (Str)   |
 | Transport Source (Port)                                            | 128             | 5 (Str)    |
 | Network Destination Address:                                       | 133             | 46 (Str)   |
 | Transport Destination (Port)                                       | 179             | 5 (Str)    |
@@ -145,7 +151,7 @@ One of the most powerful values of the processed header is the `Payload Offset`.
 This offset value can be used in a `yara` `condition`, to match payload-specific data.
 Keep in mind, you need to jump an additional `255` bytes to the begining of he packet data,
 in additon to payload offset. For example:
-```
+```yara
 rule example_01 {
     meta:
         author = "YAIDS.io"
@@ -160,7 +166,7 @@ rule example_01 {
 
 The remaining header offsets provide the ability to perform conditional matching (filtering) on the
 listed packet attributes (addresses, ports, etc.). For example:
-```
+```yara
 rule example_02 {
     meta:
         author = "YAIDS.io"
@@ -192,11 +198,11 @@ rule example_02 {
 ```
 
 ##### Yara External Variables
-To simplify the usgae of the packet header values, `yaidsc` (the rule compliler) will automatically
-provide `external variables`.  When using `yaidsc` to compile your rules, theres not need to memorize
+To simplify using the packet header values, `yaidsc` (the rule compliler) will automatically
+provide `external variables`. When using `yaidsc` to compile your rules, there's no need to memorize
 the offset locations.
 
-The Externabl Variables:
+External Variables:
 
 | Value                                                              | Variable          |
 | ------------------------------------------------------------------ | ----------------- |
@@ -212,7 +218,7 @@ The Externabl Variables:
 | Transport Destination (Port)                                       | transportDest     |
 
 Compare the previous two example to this example using the external variables:
-```
+```yara
 rule example_03 {
     meta:
         author = "YAIDS.io"
@@ -244,9 +250,9 @@ rule example_03 {
 ```
 
 #### Supported Protocols
-YAIDS supports all libpcap-comptable data (network or otherwise).
+YAIDS supports all libpcap-compatible data (network or otherwise).
 
-owever the header parsing does have some limitations.
+However, the header parsing does have some limitations. Only the following protocols will be parsed.
 
 ##### Supported Layer-2 / Frame Protocols
 
@@ -299,25 +305,27 @@ owever the header parsing does have some limitations.
 | ICMP          | ICMP        |
 
 Remember, you can write rules for _any_ traffic type, but if the protocols are not listed above,
-`yaids` will not automatically parse the headers and therefore will not populare the `External Variables`
+`yaids` will not automatically parse the headers and therefore will not populate the `External Variables`
 
-In cases where the protocol is unsupported the default value will be "UNKN", which will be used in the
+In cases where the protocol is unsupported, the default value will be "UNKN", which will be used in the
 alert output and the `External Variables`.
 
 ## Technical Details
 The processing flow of YAIDS is straight-forward; data comes in, is processed, and then goes out: *INPUT->PROCESSING->OUTPUT*.
 
-The complexity comes from multi-threading. Although network streams (from a device or file) are serial, the packets' processing can be computationally expensive and long-lived. Put simply, packets traverse the network faster than an IDS can examine.
+The complexity comes from multi-threading. Although network streams (from a device or file) are serial, the packets' processing
+can be computationally expensive and long-lived. Put simply, packets traverse the network faster than an IDS can examine.
 
-YAIDS resolves this disadvantage by parallelizing the processing of packets.  Thus, the flow is more complex:
+YAIDS resolves this disadvantage by parallelizing the processing of packets. Thus, the flow is more complex:
  * Input: *INPUT->INPUT QUEUE*
  * Processing: *IINPUT QUEUE->PROCESSING->OUTPUT QUEUE*
  * Output: *OUTPUT QUEUE->OUTPUT*
 
-To obtain a better understanding of this processing flow, review the flowchart below.
+To obtain a better understanding of this processing flow, review the flowchart.
 
 ### Priority
-For live captures, the *INPUT* is prioritized to prevent missing/dropping packets.  For offline processing (reading of a PCAP file), the processing is prioritized to optimize the speed.
+For live captures, the *INPUT* is prioritized to prevent missing/dropping packets.
+For offline processing (reading of a PCAP file), the processing is prioritized to optimize the speed.
 
 Priority is achieved through the utilization of a triple `mutex`:
  * Read/Low Priority
@@ -325,7 +333,8 @@ Priority is achieved through the utilization of a triple `mutex`:
  * Write/High Priority
 
 ### Data Queues
-Data queues are created via a series of `structs` with a pointer to the subsequent `struct`. This is combined with a separate "queue" `struct` containing pointers to the *first* and *last* data `structs`.
+Data queues are created via a series of `structs` with a pointer to the subsequent `struct`.
+This is combined with a separate "queue" `struct` containing pointers to the *first* and *last* data `structs`.
 ```
 +-----------------+     +-----------------+     +-----------------+     +-----------------+
 |                 |     |                 |     |                 |     |                 |
@@ -414,6 +423,54 @@ Data queues are created via a series of `structs` with a pointer to the subseque
                         |                 |     |                 |
                         *-----------------*     *-----------------*
 ```
+
+### Code Testing
+YAIDS is tested using both automated and manual processes. The testing conducted covers functional
+testing, security testing, and code quality analysis.
+
+Some of the tools utilized for testing include:
+ * [CodeQL](https://securitylab.github.com/tools/codeql)
+ * [valgrind](https://valgrind.org/)
+ * [AFL/american fuzzy lop](https://lcamtuf.coredump.cx/afl/)
+ * [mutiny](https://github.com/Cisco-Talos/mutiny-fuzzer)
+ * [ShellCheck](https://www.shellcheck.net/)
+ * [gcc (-Wall and -Werror)](https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
+
+In addition to the third-party tools listed above, `yaids` inclues a [_test suite_](https://github.com/wrayjustin/yaids/tree/main/tests).
+
+#### Test Suite
+The test suite includes PCAP files and Yara Rules, and verifies that multiple modes of `yaids` return
+the correct alerts and output.
+
+The following modes are tested:
+ * Output Mode
+ * Silent Mode
+ * Default Mode / Re-Processing of the Default Mode output
+
+The following test cases are included in the test suite:
+
+| Test Name | Test Count  | Description                                    |
+| --------- | ----------- | -----------------------------------------------|
+| test_A    | 6           | HTTP Traffic/Rules                             |
+| test_B    | 3           | FTP Traffic/Rules                              |
+| test_C    | 1           | UDP Traffic/Rules                              |
+| test_D    | 9           | Traffic Attributes (Source, Destination, etc.) |
+| test_E    | 1           | Combined Ruleset                               |
+| test_F    | 3           | BPF Test                                       |
+
+All tests are run three times to ensure consistent results. Additionally, the tests are run using
+both standard PCAP and PCAPNG files.
+
+NOTE: The PCAP files included for testing purposes are sources from [NETRESEC](https://www.netresec.com/?page=MACCDC).
+
+#### Automated Testing Workflows
+There are three sets of tests conducted automatically on the [yaids/main](https://github.com/wrayjustin/yaids) branch.
+The statuses of these tests are displayed at the top of the documentation. Furthermore, you can view the
+historical results for these workflows via [GitHub Actions](https://github.com/wrayjustin/yaids/actions).
+
+ * [Build Testing](https://github.com/wrayjustin/yaids/blob/main/.github/workflows/build.yml)
+ * [Test Suite](https://github.com/wrayjustin/yaids/blob/main/.github/workflows/tests.yml)
+ * [Code Quality/CodeQL](https://github.com/wrayjustin/yaids/blob/main/.github/workflows/codeql-analysis.yml)
 
 ## License
 ```

@@ -116,6 +116,8 @@ typedef struct yaidsConfig_struct {
     char *pcapInputFile;
     char *outputAlertFile;
     char *outputPcapFile;
+    char * pcapFilterFile;
+    char * bpfContents;
 } yaidsConfig;
 
 typedef struct yaidsThreadStatuses_struct {

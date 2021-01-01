@@ -6,6 +6,12 @@ sort: 6
 ![YAIDS](/yaids.png)
 # ChangeLog
 
+For a fully up-to-date changelog, please see the [commit log](https://github.com/wrayjustin/yaids/commits/main).
+
+## Updated Documentation - Wed Dec 30 07:53:53 2020 +0000
+
+[f2bc87c](https://github.com/wrayjustin/yaids/commit/f2bc87c5a90088b5f8116b009819e3fec5a9f0a3) by [wrayjustin](https://github.com/wrayjustin)
+
 ## Additional README.md Updates - Wed Dec 30 07:07:39 2020 +0000
 
 [ea3b233](https://github.com/wrayjustin/yaids/commit/ea3b2336fb28122b412cb7e12886d43d88384a55) by [wrayjustin](https://github.com/wrayjustin)

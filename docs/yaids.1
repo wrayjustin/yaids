@@ -82,11 +82,11 @@ To process an exiisting PCAP file, use the following basic options:
 .SS Options
 .PP
 You can obtain more information from the help message by running:
-\f[C]yaids \-\-help\f[R]
+\f[C]yaids \-\-help\f[R] or \f[C]man yaids\f[R]
 .IP
 .nf
 \f[C]
-YAIDS \-\- 0.0.1
+YAIDS \-\- 0.0.5
         Yara as an Intrusion Detection System / Yet Another Intrusion Detection System
         An Intrusion Detection System (IDS), utilizing Yara and multi\-threading
         COPYRIGHT (C) Justin M. Wray | Licensed: BSD 3\-Clause
@@ -98,6 +98,7 @@ Usage:
                 \-y    <FILE>              Rules: Yara Rules File, compiled (required)
                 \-n    <NAME>              Prefix Name: Output files, prefix (optional, defaults to epoch)
                 \-w    <PATH>              Output Path: Output path (optional, defaults to current working directory)
+                \-f    <FILE>              BPF: BPF (PCAP Filter) File (optional, no traffic filtering)
                 \-t    <INT>               Threads: Number of Yara Threads (optional, defaults to 2 + 4 x CPU cores)
                 \-l    <INT>               Timelimit: Number of seconds to run, before exiting (optional, defaults to 0 \- run until finished or interrupted)
                 \-s                        Silent Mode: Write output files, but don\[aq]t output alerts to STDOUT (optional, incompatible with Output Only Mode)
@@ -129,11 +130,11 @@ An example alert:
 \f[C]2020\-12\-20 01:01:01 \- Metasploit_Download [$s1:0x42:3] {GET /metasploitframework\-latest.msi} [171:171/171] (ETH/IP/TCP) 10:00:00:00:00:B3 > 10:00:00:00:00:F7 \- 198.51.100.12:41309 > 203.0.113.37:80\f[R]
 .SS Rules
 .PP
-YAIDS supports any Yara\-compatable rule, including enabled and properly
-configured modules.
+YAIDS supports any Yara\-compatible rule, including enabled and
+adequately configured modules.
 .PP
-For convinenve, YAIDS also provides a \[lq]drop\-in\[rq] replacement for
-\f[C]yara\f[R] (the Yara Rules Compiler).
+For convenience, YAIDS also provides a \[lq]drop\-in\[rq] replacement
+for \f[C]yara\f[R] (the Yara Rules Compiler).
 In addition to some feature enhancements, \f[C]yaidsc\f[R] sets
 \[lq]external\[rq] variables for various packet offsets.
 .PP
@@ -146,7 +147,7 @@ Rules (https://yara.readthedocs.io/en/stable/writingrules.html).
 identical syntax.
 If needed, you can also pass additional options to \f[C]yarac\f[R].
 Note that \f[C]yaidsc\f[R] is not a binary replacement for
-\f[C]yarac\f[R], it is a wrapper script.
+\f[C]yarac\f[R]; it is a wrapper script.
 The two major feature improvments are: * Multi\-File Support, including
 Directories (which will compile all \f[C]*.yar\f[R] files in the
 directories provided) * External Variables for Packet Fields
@@ -237,7 +238,7 @@ T}@T{
 17 (Str)
 T}
 T{
-Network Source Adderess
+Network Source Address
 T}@T{
 82
 T}@T{
@@ -287,7 +288,7 @@ rule example_01 {
     strings:
         $string1 = \[dq]GET\[dq]
     condition:
-        $string1 at (int8(0) + 255)z
+        $string1 at (int8(0) + 255)
 }
 \f[R]
 .fi
@@ -331,12 +332,12 @@ rule example_02 {
 .fi
 .SS Yara External Variables
 .PP
-To simplify the usgae of the packet header values, \f[C]yaidsc\f[R] (the
-rule compliler) will automatically provide \f[C]external variables\f[R].
-When using \f[C]yaidsc\f[R] to compile your rules, theres not need to
-memorize the offset locations.
+To simplify using the packet header values, \f[C]yaidsc\f[R] (the rule
+compliler) will automatically provide \f[C]external variables\f[R].
+When using \f[C]yaidsc\f[R] to compile your rules, there\[cq]s no need
+to memorize the offset locations.
 .PP
-The Externabl Variables:
+External Variables:
 .PP
 .TS
 tab(@);
@@ -429,16 +430,17 @@ rule example_03 {
         $networkSource at networkSource and
         $transportSource at transportSource and
         $networkDest at networkDest and
-        $transportDest at transportDest
+        $transportDest at transportDest and
         $string1 at (int8(0) + 255)
 }
 \f[R]
 .fi
 .SS Supported Protocols
 .PP
-YAIDS supports all libpcap\-comptable data (network or otherwise).
+YAIDS supports all libpcap\-compatible data (network or otherwise).
 .PP
-owever the header parsing does have some limitations.
+However, the header parsing does have some limitations.
+Only the following protocols will be parsed.
 .SS Supported Layer\-2 / Frame Protocols
 .PP
 .TS
@@ -653,10 +655,10 @@ T}
 .PP
 Remember, you can write rules for \f[I]any\f[R] traffic type, but if the
 protocols are not listed above, \f[C]yaids\f[R] will not automatically
-parse the headers and therefore will not populare the
+parse the headers and therefore will not populate the
 \f[C]External Variables\f[R]
 .PP
-In cases where the protocol is unsupported the default value will be
+In cases where the protocol is unsupported, the default value will be
 \[lq]UNKN\[rq], which will be used in the alert output and the
 \f[C]External Variables\f[R].
 .SS Technical Details
@@ -677,7 +679,7 @@ Processing: \f[I]IINPUT QUEUE\->PROCESSING\->OUTPUT QUEUE\f[R] * Output:
 \f[I]OUTPUT QUEUE\->OUTPUT\f[R]
 .PP
 To obtain a better understanding of this processing flow, review the
-flowchart below.
+flowchart.
 .SS Priority
 .PP
 For live captures, the \f[I]INPUT\f[R] is prioritized to prevent
@@ -785,6 +787,110 @@ containing pointers to the \f[I]first\f[R] and \f[I]last\f[R] data
                         *\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-*     *\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-*
 \f[R]
 .fi
+.SS Code Testing
+.PP
+YAIDS is tested using both automated and manual processes.
+The testing conducted covers functional testing, security testing, and
+code quality analysis.
+.PP
+Some of the tools utilized for testing include: *
+CodeQL (https://securitylab.github.com/tools/codeql) *
+valgrind (https://valgrind.org/) * AFL/american fuzzy
+lop (https://lcamtuf.coredump.cx/afl/) *
+mutiny (https://github.com/Cisco-Talos/mutiny-fuzzer) *
+ShellCheck (https://www.shellcheck.net/) * gcc (\-Wall and
+\-Werror) (https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
+.PP
+In addition to the third\-party tools listed above, \f[C]yaids\f[R]
+inclues a \f[I]test
+suite\f[R] (https://github.com/wrayjustin/yaids/tree/main/tests).
+.SS Test Suite
+.PP
+The test suite includes PCAP files and Yara Rules, and verifies that
+multiple modes of \f[C]yaids\f[R] return the correct alerts and output.
+.PP
+The following modes are tested: * Output Mode * Silent Mode * Default
+Mode / Re\-Processing of the Default Mode output
+.PP
+The following test cases are included in the test suite:
+.PP
+.TS
+tab(@);
+l l l.
+T{
+Test Name
+T}@T{
+Test Count
+T}@T{
+Description
+T}
+_
+T{
+test_A
+T}@T{
+6
+T}@T{
+HTTP Traffic/Rules
+T}
+T{
+test_B
+T}@T{
+3
+T}@T{
+FTP Traffic/Rules
+T}
+T{
+test_C
+T}@T{
+1
+T}@T{
+UDP Traffic/Rules
+T}
+T{
+test_D
+T}@T{
+9
+T}@T{
+Traffic Attributes (Source, Destination, etc.)
+T}
+T{
+test_E
+T}@T{
+1
+T}@T{
+Combined Ruleset
+T}
+T{
+test_F
+T}@T{
+3
+T}@T{
+BPF Test
+T}
+.TE
+.PP
+All tests are run three times to ensure consistent results.
+Additionally, the tests are run using both standard PCAP and PCAPNG
+files.
+.PP
+NOTE: The PCAP files included for testing purposes are sources from
+NETRESEC (https://www.netresec.com/?page=MACCDC).
+.SS Automated Testing Workflows
+.PP
+There are three sets of tests conducted automatically on the
+yaids/main (https://github.com/wrayjustin/yaids) branch.
+The statuses of these tests are displayed at the top of the
+documentation.
+Furthermore, you can view the historical results for these workflows via
+.IP \[bu] 2
+Build
+Testing (https://github.com/wrayjustin/yaids/blob/main/.github/workflows/build.yml)
+.IP \[bu] 2
+Test
+Suite (https://github.com/wrayjustin/yaids/blob/main/.github/workflows/tests.yml)
+.IP \[bu] 2
+Code
+Quality/CodeQL (https://github.com/wrayjustin/yaids/blob/main/.github/workflows/codeql-analysis.yml)
 .SS License
 .IP
 .nf

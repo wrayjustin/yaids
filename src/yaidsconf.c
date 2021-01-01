@@ -59,6 +59,7 @@ extern yaidsConfig yaidsconf_init(void)
     config.pcapInputFile = NULL;
     config.outputAlertFile = NULL;
     config.outputPcapFile = NULL;
+    config.pcapFilterFile = NULL;
     config.threads = yaidsconf_get_default_thread_count();
     config.timelimit = 0;
     config.read_pcap_file = 0;
@@ -77,7 +78,7 @@ extern int yaidsconf_get_default_thread_count(void)
     return get_nprocs() * 4;
 }
 
-extern void yaidsconf_config_init(yaidsConfig_ptr config, char *exeName,
+extern void yaidsconf_config_init(yaidsConfig_ptr config, char *exeName,        //LGTM[cpp/poorly-documented-function] - Configuration Initalization
                                   int options)
 {
     if (config->status != YAIDS_PENDING_CONFIG) {
@@ -102,10 +103,20 @@ extern void yaidsconf_config_init(yaidsConfig_ptr config, char *exeName,
         return;
     }
 
-    if ((config->yaraRulesFile)
-        && (access(config->yaraRulesFile, R_OK) != YAIDS_SUCCESS)) {
+    if ((config->pcapInputFile)
+        && (access(config->pcapInputFile, R_OK) != YAIDS_SUCCESS)) {
         config->status = YAIDS_FILE_DOES_NOT_EXIST;
         return;
+    }
+
+    if (config->pcapFilterFile) {
+        if (access(config->pcapFilterFile, R_OK) != YAIDS_SUCCESS) {
+            config->status = YAIDS_FILE_DOES_NOT_EXIST;
+            return;
+        } else {
+            config->bpfContents =
+                yaidsio_read_file(config->pcapFilterFile);
+        }
     }
 
     if ((config->pcapDevice || config->pcapInputFile)
