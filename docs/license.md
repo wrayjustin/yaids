@@ -1,7 +1,7 @@
 ---
 title: License
 permalink: /license/
-sort: 7
+sort: 8
 ---
 ![YAIDS](/yaids.png)
 # License

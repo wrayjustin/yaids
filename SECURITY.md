@@ -7,9 +7,10 @@ However, YAIDS is versioned, and older versions may not receive backported updat
 
 Currently, the following versions are maintained:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.0.X   | :white_check_mark: |
+| Version | Supported          | Notes                                   |
+| ------- | ------------------ | --------------------------------------- |
+| 0.0.X   | :red_circle:       | Compatable with _4.0.X_, please upgrade |
+| 4.0.X   | :white_check_mark: |                                         |
 
 ## Reporting a Vulnerability
 

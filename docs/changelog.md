@@ -1,12 +1,56 @@
 ---
 title: ChangeLog
 permalink: /changelog/
-sort: 6
+sort: 7
 ---
 ![YAIDS](/yaids.png)
 # ChangeLog
 
 For a fully up-to-date changelog, please see the [commit log](https://github.com/wrayjustin/yaids/commits/main).
+
+## Added CONTRIBUTING.md - Sat Jan 2 20:12:18 2021 +0000
+
+[d0814da](https://github.com/wrayjustin/yaids/commit/d0814dad7962fdf1dd5e2bd648c80f405e5d3223) by [wrayjustin](https://github.com/wrayjustin)
+
+## Added CLA.md - Sat Jan 2 20:11:28 2021 +0000
+
+[3da26c7](https://github.com/wrayjustin/yaids/commit/3da26c712485aa59164caad2b1485a0211cb43f9) by [wrayjustin](https://github.com/wrayjustin)
+
+## Updated PULL_REQUEST_TEMPLATE.md - Sat Jan 2 20:10:55 2021 +0000
+
+[b8c373e](https://github.com/wrayjustin/yaids/commit/b8c373e2df725665610d4168ba0b748a8b181e83) by [wrayjustin](https://github.com/wrayjustin)
+
+## Updated CODE_OF_CONDUCT.md - Sat Jan 2 18:27:13 2021 +0000
+
+[16fc319](https://github.com/wrayjustin/yaids/commit/16fc3191d37a8749201a7a1bf745d5fa0d37e4a1) by [wrayjustin](https://github.com/wrayjustin)
+
+## Update support.md - Sat Jan 2 12:50:30 2021 -0500
+
+[e148d73](https://github.com/wrayjustin/yaids/commit/e148d733238f3668c164ad8bdba526274d8f30e2) by [wrayjustin](https://github.com/wrayjustin)
+
+## Update feature-request.md - Sat Jan 2 12:50:17 2021 -0500
+
+[f83e862](https://github.com/wrayjustin/yaids/commit/f83e8622cbda39d01a13c3b07087e41db8a819df) by [wrayjustin](https://github.com/wrayjustin)
+
+## Update bug-report.md - Sat Jan 2 12:50:02 2021 -0500
+
+[53a1926](https://github.com/wrayjustin/yaids/commit/53a19266e120be87c029a90e5196ca30a1289c30) by [wrayjustin](https://github.com/wrayjustin)
+
+## Create PULL_REQUEST_TEMPLATE.md - Sat Jan 2 11:55:22 2021 -0500
+
+[16db5bc](https://github.com/wrayjustin/yaids/commit/16db5bc4e7f8e5f7c241869acd5eb8ec9927ab5e) by [wrayjustin](https://github.com/wrayjustin)
+
+## Update CODE_OF_CONDUCT.md - Sat Jan 2 01:55:02 2021 -0500
+
+[655a0f3](https://github.com/wrayjustin/yaids/commit/655a0f327d9062326e805ad3d8a6aab7c7d63c4d) by [wrayjustin](https://github.com/wrayjustin)
+
+## Create CODE_OF_CONDUCT.md - Sat Jan 2 01:04:04 2021 -0500
+
+[923007f](https://github.com/wrayjustin/yaids/commit/923007fc4831e2798d259363f7d2f27d2caa72e9) by [wrayjustin](https://github.com/wrayjustin)
+
+## Added BPF Support, Updated Documentation, Minor Updates - Fri Jan 1 22:08:24 2021 +0000
+
+[5907960](https://github.com/wrayjustin/yaids/commit/5907960e3c965107b65f9f2a97e5ab09f4509658) by [wrayjustin](https://github.com/wrayjustin)
 
 ## Updated Documentation - Wed Dec 30 07:53:53 2020 +0000
 

@@ -8,7 +8,7 @@ sort: 1
 
 You can obtain more information from the help message by running: `yaids --help` or `man yaids`
 ```
-YAIDS -- 0.0.5
+YAIDS -- 4.0.1
         Yara as an Intrusion Detection System / Yet Another Intrusion Detection System
         An Intrusion Detection System (IDS), utilizing Yara and multi-threading
         COPYRIGHT (C) Justin M. Wray | Licensed: BSD 3-Clause

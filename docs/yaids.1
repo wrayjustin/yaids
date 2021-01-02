@@ -12,7 +12,8 @@ System
 .PP
 An Intrusion Detection System (IDS), utilizing Yara and multi\-threading
 .PP
-
+.PP
+.PP
 .SS Installation
 .SS Prerequisites
 .IP \[bu] 2
@@ -67,6 +68,36 @@ Install \f[C]libyara\f[R] (including development headers)
 .IP "4." 3
 Compile (from the \f[C]src\f[R] directory):
 \f[C]gcc <GCC OPTIONS> yaids.c yaidsconf.c yaidsio.c yaidspcap.c yaidsyara.c yaidsthread.c \-o yaids \-I. \-I.. \-I../include/ \-lpcap \-lyara \-lpthread \-lm <ADDITIONAL LIBRARIES>\f[R]
+.SS Versioning
+.PP
+YAIDS uses a three value version number: X.Y.Z.
+The version number is a modified form of \f[C]SemVer\f[R] (Semantic
+Versioning).
+.PP
+Given the close dependency on \f[C]Yara\f[R], the first version value
+maps to the compatible Major Yara release.
+While \f[C]libpcap\f[R] is another major dependency of \f[C]yaids\f[R],
+\f[C]libpcap\f[R] maintains binary compatibility across releases.
+.PP
+The YAIDS version fields: YARA_MAJOR.MAJOR.MINOR (For example, 4.0.0)
+.IP \[bu] 2
+YARA_MAJOR \- The compatible Yara (Major) version
+.IP \[bu] 2
+MAJOR \- Incremented on significant changes
+.IP \[bu] 2
+MINOR \- Incremented on minor changes or patches
+.PP
+Releases that increment the \f[I]YARA_MAJOR\f[R] field are highly likely
+to be incompatible with differing versions of Yara.
+Releases that increment the \f[I]MAJOR\f[R] field may be incompatible
+with previous \f[C]yaids\f[R] releases.
+Whereas \f[I]MINOR\f[R] releases should be forwards and backwards
+compatible within the same \f[I]YARA_MAJOR.MAJOR\f[R] release family.
+.PP
+Note: At present, YAIDS is provided via rolling\-release; that is, there
+is currently only a single line of releases.
+However, that may potentially change on the release of the next
+\f[I]major\f[R] Yara version.
 .SS Usage
 .PP
 YAIDS can run on either an interface (live capture) or stored PCAP
@@ -86,7 +117,7 @@ You can obtain more information from the help message by running:
 .IP
 .nf
 \f[C]
-YAIDS \-\- 0.0.5
+YAIDS \-\- 4.0.1
         Yara as an Intrusion Detection System / Yet Another Intrusion Detection System
         An Intrusion Detection System (IDS), utilizing Yara and multi\-threading
         COPYRIGHT (C) Justin M. Wray | Licensed: BSD 3\-Clause

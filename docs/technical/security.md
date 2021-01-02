@@ -6,7 +6,6 @@ sort: 6
 ![YAIDS](/yaids.png)
 # Security
 
-# Security Policy
 Thank you for your interest in improving the security of `YAIDS`. We appreciate your efforts and responsible disclosure!
 
 ## Supported Versions
@@ -15,9 +14,10 @@ However, YAIDS is versioned, and older versions may not receive backported updat
 
 Currently, the following versions are maintained:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.0.X   | :white_check_mark: |
+| Version | Supported          | Notes                                   |
+| ------- | ------------------ | --------------------------------------- |
+| 0.0.X   | NO       | Compatable with _4.0.X_, please upgrade |
+| 4.0.X   | YES |                                         |
 
 ## Reporting a Vulnerability
 

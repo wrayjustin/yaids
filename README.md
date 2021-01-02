@@ -9,6 +9,12 @@ An Intrusion Detection System (IDS), utilizing Yara and multi-threading
 [![Code Analysis](https://github.com/wrayjustin/yaids/workflows/Code%20Analysis/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3A%22Code+Analysis%22)
 [![Tests](https://github.com/wrayjustin/yaids/workflows/Tests/badge.svg)](https://github.com/wrayjustin/yaids/actions?query=workflow%3ATests)
 
+[![License](https://img.shields.io/github/license/wrayjustin/yaids?label=License&color=success)](https://github.com/wrayjustin/yaids/blob/main/COPYING)
+[![Latest Version](https://img.shields.io/github/v/tag/wrayjustin/yaids?label=Latest%20Version)](https://github.com/wrayjustin/yaids/tags)
+
+[![Website](https://img.shields.io/badge/Website-yaids.io-success)](https://yaids.io)
+[![Repo](https://img.shields.io/badge/Repo-yaids/main-success)](https://github.com/wrayjustin/yaids/)
+
 ## Installation
 
 ### Prerequisites
@@ -42,6 +48,25 @@ An Intrusion Detection System (IDS), utilizing Yara and multi-threading
 4. Compile (from the `src` directory): `gcc <GCC OPTIONS> yaids.c yaidsconf.c yaidsio.c yaidspcap.c
 yaidsyara.c yaidsthread.c -o yaids -I. -I.. -I../include/ -lpcap -lyara -lpthread -lm <ADDITIONAL LIBRARIES>`
 
+### Versioning
+YAIDS uses a three value version number: X.Y.Z. The version number is a modified form of `SemVer` (Semantic Versioning).
+
+Given the close dependency on `Yara`, the first version value maps to the compatible Major Yara release. While `libpcap`
+is another major dependency of `yaids`, `libpcap` maintains binary compatibility  across releases.
+
+The YAIDS version fields: YARA_MAJOR.MAJOR.MINOR (For example, 4.0.0)
+
+* YARA_MAJOR - The compatible Yara (Major) version
+* MAJOR - Incremented on significant changes
+* MINOR - Incremented on minor changes or patches
+
+Releases that increment  the _YARA\_MAJOR_ field are highly likely to be incompatible with differing versions of Yara.
+Releases that increment the _MAJOR_ field may be incompatible with previous `yaids` releases. Whereas _MINOR_ releases
+should be forwards and backwards compatible within the same _YARA\_MAJOR\.MAJOR_ release family.
+
+Note: At present, YAIDS is provided via rolling-release; that is, there is currently only a single line of releases.
+However, that may potentially change on the release of the next _major_ Yara version.
+
 ## Usage
 YAIDS can run on either an interface (live capture) or stored PCAP files. You can use any Yara supported rules.
 
@@ -53,7 +78,7 @@ To process an exiisting PCAP file, use the following basic options: `yaids -r <p
 ### Options
 You can obtain more information from the help message by running: `yaids --help` or `man yaids`
 ```
-YAIDS -- 0.0.5
+YAIDS -- 4.0.1
         Yara as an Intrusion Detection System / Yet Another Intrusion Detection System
         An Intrusion Detection System (IDS), utilizing Yara and multi-threading
         COPYRIGHT (C) Justin M. Wray | Licensed: BSD 3-Clause
