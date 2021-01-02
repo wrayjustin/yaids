@@ -50,5 +50,5 @@
 - [ ] I have read and agree to the [**Contributor Agreement**](https://github.com/wrayjustin/yaids/blob/main/CLA.md) document.
 - [ ] I have read and agree to the [**Code of Conduct**](https://github.com/wrayjustin/yaids/blob/main/CODE_OF_CONDUCT.md) document.
 - [ ] I have released the changes within this PR under the project [**LICENSE**](https://github.com/wrayjustin/yaids/blob/main/COPYING.md).
-- [ ] I commit to tracking this PR, discussing the changes and feedback, completeting required changes, fixing issues, and ensuring merge compatability (merge/rebasing).
-- [ ] I understand that if the changes incorporated within this PR are for some reason incompatable with the current code that these changes may be incorporated within another PR (with proper attribution).
+- [ ] I commit to tracking this PR, discussing the changes and feedback, completing required changes, fixing issues, and ensuring merge compatibility (merge/rebasing).
+- [ ] I understand that if the changes incorporated within this PR are for some reason incompatible with the current code that these changes may be incorporated within another PR (with proper attribution).
