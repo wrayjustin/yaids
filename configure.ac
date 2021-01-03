@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([yaids], [0.0.5], [wray.justin@gmail.com])
+AC_INIT([yaids], [4.0.1], [wray.justin@gmail.com])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 
