@@ -1,12 +1,16 @@
 ---
 title: ChangeLog
 permalink: /changelog/
-sort: 7
+sort: 8
 ---
 ![YAIDS](/yaids.png)
 # ChangeLog
 
 For a fully up-to-date changelog, please see the [commit log](https://github.com/wrayjustin/yaids/commits/main).
+
+## Updated Documentation - Sat Jan 2 21:41:05 2021 +0000
+
+[e7972e5](https://github.com/wrayjustin/yaids/commit/e7972e55470d461cd125c2c58177e64abaec1ef4) by [wrayjustin](https://github.com/wrayjustin)
 
 ## Added CONTRIBUTING.md - Sat Jan 2 20:12:18 2021 +0000
 

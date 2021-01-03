@@ -1,7 +1,7 @@
 ---
 title: Technical Design
 permalink: /technical/
-sort: 4
+sort: 5
 ---
 ![YAIDS](/yaids.png)
 # Technical Design

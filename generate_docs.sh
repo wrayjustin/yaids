@@ -320,11 +320,12 @@ function create_docs_readme
 function generate_doc_files
 {
     create_docs_readme || return 1 # Main Page (Home)
-    create_markdown_index 'docs/installation/index.md' 'Installation' '/installation/' '2' || return 1 # Installation: Index
-    create_markdown_index 'docs/usage/index.md' 'Usage' '/usage/' '3' || return 1 # Usage: Index
-    create_markdown_index 'docs/technical/index.md' 'Technical Design' '/technical/' '4' || return 1 # Technica Design: Index
-    create_markdown_index 'docs/contributing/index.md' 'Contributing' '/contributing/' '5' || return 1 # Technica Design: Index
-    create_markdown_index 'docs/code/index.md' 'Code' '/code/' '6' 'tip' \
+    create_markdown_from_section 'README.md' 'docs/features.md' 'Features' '/features/' '2'
+    create_markdown_index 'docs/installation/index.md' 'Installation' '/installation/' '3' || return 1 # Installation: Index
+    create_markdown_index 'docs/usage/index.md' 'Usage' '/usage/' '4' || return 1 # Usage: Index
+    create_markdown_index 'docs/technical/index.md' 'Technical Design' '/technical/' '5' || return 1 # Technica Design: Index
+    create_markdown_index 'docs/contributing/index.md' 'Contributing' '/contributing/' '6' || return 1 # Contributing: Index
+    create_markdown_index 'docs/code/index.md' 'Code' '/code/' '7' 'tip' \
         'The full source code can be viewed in the [yaids/main](https://github.com/wrayjustin/yaids) repository' || return 1 # Code: Index
     create_markdown_index 'docs/code/headers/index.md' 'Headers' '/code/headers/' '1' 'tip' \
         'The full source code can be viewed in the [yaids/main](https://github.com/wrayjustin/yaids) repository' || return 1 # Code: Headers Index
@@ -358,8 +359,8 @@ function generate_doc_files
     create_markdown_from_file 'CONTRIBUTING.md' 'docs/contributing/guide.md' 'Contribution Guide' '/contributing/guide' '1' || return 1 # Contributing: Contribution Guide
     create_markdown_from_file 'CODE_OF_CONDUCT.md' 'docs/contributing/code-of-conduct.md' 'Code of Conduct' '/contributing/code-of-conduct' '2' || return 1 # Contributing: Code of Conduct
     create_markdown_from_file 'CLA.md' 'docs/contributing/cla.md' 'Contributor Agreement' '/contributing/cla' '3' || return 1 # Contributing: Contributor Agreement
-    create_markdown_changelog '' 'docs/changelog.md' 'ChangeLog' '/changelog/' '7' || return 1 # ChangeLog
-    create_markdown_from_bottom 'README.md' 'docs/license.md' 'License' '/license/' '8' || return 1 # License
+    create_markdown_changelog '' 'docs/changelog.md' 'ChangeLog' '/changelog/' '8' || return 1 # ChangeLog
+    create_markdown_from_bottom 'README.md' 'docs/license.md' 'License' '/license/' '9' || return 1 # License
     generate_code_docs || return 1 # Code (Doxygen Converted)
 }
 

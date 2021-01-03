@@ -1,7 +1,7 @@
 ---
 title: Contributing
 permalink: /contributing/
-sort: 5
+sort: 6
 ---
 ![YAIDS](/yaids.png)
 # Contributing

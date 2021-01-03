@@ -1,7 +1,7 @@
 ---
 title: Installation
 permalink: /installation/
-sort: 2
+sort: 3
 ---
 ![YAIDS](/yaids.png)
 # Installation

@@ -22,5 +22,7 @@ An Intrusion Detection System (IDS), utilizing Yara and multi-threading
 [![Website](https://img.shields.io/badge/Website-yaids.io-success)](https://yaids.io)
 [![Repo](https://img.shields.io/badge/Repo-yaids/main-success)](https://github.com/wrayjustin/yaids/)
 
+-----
+
 ## Documentation
 {% include list.liquid all=true %}

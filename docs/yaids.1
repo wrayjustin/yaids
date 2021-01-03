@@ -14,6 +14,92 @@ An Intrusion Detection System (IDS), utilizing Yara and multi\-threading
 .PP
 .PP
 .PP
+.PP
+   *   *   *   *   *
+.SS Table of Contents
+.IP \[bu] 2
+Features
+.IP \[bu] 2
+Installation
+.RS 2
+.IP \[bu] 2
+Prerequisites
+.IP \[bu] 2
+Ubuntu (Quick Install)
+.IP \[bu] 2
+Other Distributions (Basic Install)
+.IP \[bu] 2
+Manual/Development Installation
+.IP \[bu] 2
+Manual (Without AutoTools)
+.RE
+.IP \[bu] 2
+Usage
+.RS 2
+.IP \[bu] 2
+Examples
+.IP \[bu] 2
+Command Line Options
+.IP \[bu] 2
+Output
+.IP \[bu] 2
+Rules
+.RS 2
+.IP \[bu] 2
+yaidsc
+.IP \[bu] 2
+Packet Headers and Offsets
+.IP \[bu] 2
+Offsets
+.IP \[bu] 2
+Offset Examples
+.IP \[bu] 2
+Yara External Variables
+.RE
+.RE
+.IP \[bu] 2
+Technical Details
+.RS 2
+.IP \[bu] 2
+Threat Priority
+.IP \[bu] 2
+Data Queues
+.IP \[bu] 2
+Flowchart
+.IP \[bu] 2
+Code Testing
+.RS 2
+.IP \[bu] 2
+Test Suite
+.IP \[bu] 2
+Automated Testing Workflows
+.RE
+.RE
+.IP \[bu] 2
+License
+.PP
+   *   *   *   *   *
+.SS Features
+.PP
+YAIDS is a Multi\-Threaded Intrusion Detection System using Yara.
+.IP \[bu] 2
+Multi\-Threaded
+.IP \[bu] 2
+Network/Stream IDS
+.IP \[bu] 2
+Performant (written in C)
+.IP \[bu] 2
+Yara Pattern Matching Engine
+.IP \[bu] 2
+Supports any PCAP compatible data stream (Network, USB, Bluetooth, etc.)
+.IP \[bu] 2
+Supports BPF (traffic filtering)
+.IP \[bu] 2
+Supports all valid Yara rules (including modules)
+.IP \[bu] 2
+Includes External Variables to build traffic/packet attribute conditions
+.IP \[bu] 2
+Multiple logging modes (alerts, PCAP data, console, file, etc.)
 .SS Installation
 .SS Prerequisites
 .IP \[bu] 2

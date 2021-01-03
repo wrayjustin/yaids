@@ -15,6 +15,52 @@ An Intrusion Detection System (IDS), utilizing Yara and multi-threading
 [![Website](https://img.shields.io/badge/Website-yaids.io-success)](https://yaids.io)
 [![Repo](https://img.shields.io/badge/Repo-yaids/main-success)](https://github.com/wrayjustin/yaids/)
 
+-----
+
+## Table of Contents
+
+ * [Features](#features)
+ * [Installation](#installation)
+   * [Prerequisites](#prerequisites)
+   * [Ubuntu (Quick Install)](#ubuntu-quick-install)
+   * [Other Distributions (Basic Install)](#other-distributions-basic-install)
+   * [Manual/Development Installation](#manualdevelopment-installation)
+   * [Manual (Without AutoTools)](#manual-without-autotools)
+ * [Usage](#usage)
+   * [Examples](#examples)
+   * [Command Line Options](#options)
+   * [Output](#output)
+   * [Rules](#rules)
+     * [yaidsc](#yaidsc)
+     * [Packet Headers and Offsets](#packet-headers-and-offsets)
+     * [Offsets](#offsets)
+     * [Offset Examples](#offset-examples)
+     * [Yara External Variables](#yara-external-variables)
+ * [Technical Details](#technical-details)
+   * [Threat Priority](#priority)
+   * [Data Queues](#data-queues)
+   * [Flowchart](#flowchart)
+   * [Code Testing](#code-testing)
+     * [Test Suite](#test-suite)
+     * [Automated Testing Workflows](#automated-testing-workflows)
+ * [License](#license)
+
+-----
+
+## Features
+
+YAIDS is a Multi-Threaded Intrusion Detection System using Yara.
+
+ * Multi-Threaded
+ * Network/Stream IDS
+ * Performant (written in C)
+ * Yara Pattern Matching Engine
+ * Supports any PCAP compatible data stream (Network, USB, Bluetooth, etc.)
+ * Supports BPF (traffic filtering)
+ * Supports all valid Yara rules (including modules)
+ * Includes External Variables to build traffic/packet attribute conditions
+ * Multiple logging modes (alerts, PCAP data, console, file, etc.)
+
 ## Installation
 
 ### Prerequisites
