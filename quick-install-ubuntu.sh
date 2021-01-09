@@ -47,6 +47,7 @@ function setup_installer
 ##################################################
 function install_dependenices
 {
+    sudo apt update
     sudo apt install --assume-yes \
                      build-essential \
                      automake \
